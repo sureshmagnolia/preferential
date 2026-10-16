@@ -1593,9 +1593,11 @@ body {
   transition: all var(--transition-smooth);
 }
 
-.modal-overlay.open {
+.modal-overlay.open,
+.modal-overlay.visible {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .modal-content {
@@ -1612,7 +1614,8 @@ body {
   transition: transform var(--transition-smooth);
 }
 
-.modal-overlay.open .modal-content {
+.modal-overlay.open .modal-content,
+.modal-overlay.visible .modal-content {
   transform: translateY(0);
 }
 

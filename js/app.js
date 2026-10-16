@@ -306,10 +306,21 @@ class STVApp {
     });
 
     // Change Password Modal
-    this.btnChangePwd?.addEventListener('click', () => this.openModal(this.modalChangePwd));
+    this.btnChangePwd?.addEventListener('click', () => {
+      this.pwdCurrent.value = '';
+      this.pwdNew.value = '';
+      this.openModal(this.modalChangePwd);
+      setTimeout(() => this.pwdCurrent?.focus(), 150);
+    });
     this.btnClosePwdModal?.addEventListener('click', () => this.closeModal(this.modalChangePwd));
     this.btnCancelPwd?.addEventListener('click', () => this.closeModal(this.modalChangePwd));
     this.btnSavePwd?.addEventListener('click', () => this.handleSaveNewPassword());
+    this.pwdCurrent?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.pwdNew?.focus();
+    });
+    this.pwdNew?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.handleSaveNewPassword();
+    });
 
     // Theme Toggle
     document.getElementById('btn-toggle-theme')?.addEventListener('click', () => this.toggleTheme());
@@ -530,12 +541,12 @@ class STVApp {
 
   openModal(modal) {
     if (!modal) return;
-    modal.classList.add('visible');
+    modal.classList.add('open', 'visible');
   }
 
   closeModal(modal) {
     if (!modal) return;
-    modal.classList.remove('visible');
+    modal.classList.remove('open', 'visible');
   }
 
   // =========================================================================
