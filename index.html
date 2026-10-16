@@ -427,27 +427,63 @@
           </p>
 
           <div class="kpi-grid" style="margin: 1.25rem 0;">
+            <!-- Card 1: Droop Quota -->
             <div class="kpi-card quota">
               <h3 class="primer-card-title">1. The Droop Quota</h3>
               <p class="primer-card-desc">
-                Calculates the exact quota necessary and sufficient to elect the required vacancies:
+                The minimum vote threshold required to guarantee election without exceeding the available seats:
               </p>
-              <div class="formula-box">$$\text{Quota} = \left\lfloor \frac{\text{Valid Votes}}{\text{Vacancies} + 1} \right\rfloor + 1$$</div>
+              <div class="math-formula-card">
+                <span>Quota</span>
+                <span>=</span>
+                <span class="math-floor-bracket">&lfloor;</span>
+                <span class="math-fraction">
+                  <span class="num">Total Valid Votes</span>
+                  <span class="den">Vacancies + 1</span>
+                </span>
+                <span class="math-floor-bracket">&rfloor;</span>
+                <span>+</span>
+                <span>1</span>
+              </div>
+              <div class="math-example-box">
+                <strong>Worked Example:</strong> For 100 valid votes and 3 vacancies:<br>
+                Quota = &lfloor;100 / (3 + 1)&rfloor; + 1 = 25 + 1 = <strong>26 votes</strong>.
+              </div>
             </div>
 
+            <!-- Card 2: Fractional Transfer Value -->
             <div class="kpi-card seats">
-              <h3 class="primer-card-title">2. Fractional Surplus Transfers (Gregory Method)</h3>
+              <h3 class="primer-card-title">2. Fractional Surplus Transfers</h3>
               <p class="primer-card-desc">
-                Surplus votes above quota are transferred to voters' 2nd and subsequent preferences scaled by the transfer factor:
+                Surplus votes above quota are transferred to voters' 2nd preferences using the Inclusive Gregory Method:
               </p>
-              <div class="formula-box">$$\text{Transfer Factor} = \frac{\text{Votes Received} - \text{Quota}}{\text{Votes Received}}$$</div>
+              <div class="math-formula-card">
+                <span>Transfer Factor</span>
+                <span>=</span>
+                <span class="math-fraction">
+                  <span class="num">Total Votes &minus; Quota</span>
+                  <span class="den">Total Votes Received</span>
+                </span>
+              </div>
+              <div class="math-example-box">
+                <strong>Worked Example:</strong> If Candidate A secures 36 votes (Quota = 26):<br>
+                Surplus = 36 &minus; 26 = 10 votes.<br>
+                Transfer Value = 10 / 36 = <strong>0.2778 per ballot</strong>.
+              </div>
             </div>
 
+            <!-- Card 3: Lowest Candidate Elimination -->
             <div class="kpi-card">
               <h3 class="primer-card-title">3. Lowest Candidate Elimination</h3>
               <p class="primer-card-desc">
-                When no active candidate reaches quota, the trailing candidate is eliminated. Their ballots transfer at 100% of their current value to next continuing preferences.
+                When no hopeful candidate reaches the winning quota, the candidate with the fewest votes is eliminated:
               </p>
+              <div class="math-formula-card" style="font-size: 0.95rem; color: #f87171; border-color: rgba(239, 68, 68, 0.3);">
+                <span>Lowest Polling Candidate &rarr; ELIMINATED</span>
+              </div>
+              <div class="math-example-box">
+                <strong>Redistribution:</strong> All ballots belonging to the eliminated candidate are transferred at their <strong>full current weight</strong> to each voter's next hopeful preference.
+              </div>
             </div>
           </div>
 
