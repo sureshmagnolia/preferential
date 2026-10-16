@@ -4,3 +4,11 @@ node_modules/
 .vscode/
 .idea/
 *.log
+
+# Prevent real nominal roll data from git
+nominal_roll.html
+nominal_roll_teachers.*
+teachers*
+*.xlsx
+*.pdf
+
