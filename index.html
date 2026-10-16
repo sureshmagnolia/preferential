@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ELECTORATE STV | Preferential Voting & Ballot Audit System</title>
-  <meta name="description" content="Ultra-professional Single Transferable Vote (STV) election platform with digital preferential ballot paper entry, serialized ballot audit verification, and Inclusive Gregory fractional transfers.">
-  <meta name="keywords" content="Single Transferable Vote, STV, Preferential Voting, Ranked Choice, Ballot Paper Entry, Serialized Ballots, Ballot Audit">
-  <meta name="author" content="Antigravity Civic Systems">
+  <title>ELECTORATE STV | Institutional Preferential Electoral & Audit System</title>
+  <meta name="description" content="Ultra-professional Single Transferable Vote (STV) election platform with live demonstrative commentary, password-secured returning officer controls, public nominal rolls, and digital nomination generation.">
+  <meta name="keywords" content="Single Transferable Vote, STV, Preferential Voting, Ranked Choice, Ballot Paper Entry, Serialized Ballots, Nominal Rolls, Nomination Portal">
+  <meta name="author" content="Institutional Electoral Board">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -37,24 +37,41 @@
       <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
         <button class="nav-tab-btn active" id="tab-btn-sim" role="tab" aria-selected="true" aria-controls="view-simulation">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-          Tally Simulation
+          Live Counting & Results
         </button>
-        <button class="nav-tab-btn" id="tab-btn-ballots" role="tab" aria-selected="false" aria-controls="view-ballots">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Ballot Entry & Candidates
+        <button class="nav-tab-btn" id="tab-btn-nominal" role="tab" aria-selected="false" aria-controls="view-nominal">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Nominal Rolls
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-nomination" role="tab" aria-selected="false" aria-controls="view-nomination">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Candidate Nominations
         </button>
         <button class="nav-tab-btn" id="tab-btn-primer" role="tab" aria-selected="false" aria-controls="view-primer">
           <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-          STV Rules
+          STV Guide
+        </button>
+        <button class="nav-tab-btn" id="tab-btn-ballots" role="tab" aria-selected="false" aria-controls="view-ballots">
+          <span id="tab-lock-icon">🔒</span>
+          Ballot Entry & Admin
         </button>
       </nav>
 
       <!-- Action Buttons -->
       <div class="nav-actions">
-        <div class="badge-official">
+        <!-- Role Status Indicator -->
+        <div class="role-badge public" id="role-badge" title="Current session mode">
           <span class="status-dot"></span>
-          <span>Verified Gregory Method</span>
+          <span id="role-badge-text">Public Observer</span>
         </div>
+
+        <!-- Auth Toggle Button -->
+        <button class="btn btn-secondary btn-sm btn-auth-lock" id="btn-auth-toggle" title="Returning Officer Passcode Authentication">
+          <span id="auth-btn-icon">🔒</span>
+          <span id="auth-btn-label">Officer Login</span>
+        </button>
+
+        <!-- Theme Toggle -->
         <button class="btn btn-ghost btn-icon" id="btn-toggle-theme" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
           <span id="theme-icon">🌙</span>
         </button>
@@ -66,7 +83,7 @@
   <main class="container" id="main-content" role="main">
 
     <!-- ========================================================================= -->
-    <!-- TAB 1: SIMULATION VIEW                                                    -->
+    <!-- TAB 1: LIVE COUNTING & RESULTS VIEW                                       -->
     <!-- ========================================================================= -->
     <section id="view-simulation" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-sim">
       
@@ -74,14 +91,14 @@
       <section class="hero-section" aria-label="Election Status and Overview">
         <div class="hero-header">
           <div class="hero-title-group">
-            <h1>Preferential Tally Visualizer</h1>
+            <h1>Preferential Tally Visualizer & Live Audit</h1>
             <p class="hero-subtitle">
-              Live multi-round fractional vote transfers, threshold quotas, and candidate state transitions.
+              Live multi-round fractional vote transfers, Inclusive Gregory Method, and observer commentary.
             </p>
           </div>
           
           <div class="preset-selector-group">
-            <span class="preset-label">Preset Scenario:</span>
+            <span class="preset-label">Election Preset:</span>
             <select id="select-preset" class="select-input" aria-label="Select Preset Election Scenario">
               <option value="faculty_senate" selected>University Senate (3 Vacancies · 5 Candidates · 100 Ballots)</option>
               <option value="dept_council">Department Council (2 Vacancies · 4 Candidates · 50 Ballots)</option>
@@ -123,10 +140,18 @@
       <section class="control-bar" aria-label="Playback and Round Navigation Controls">
         <div class="round-stepper">
           <button class="btn btn-secondary btn-sm" id="btn-first-round" title="Jump to First Round">⏮ First</button>
-          <button class="btn btn-secondary btn-sm" id="btn-prev-round" title="Previous Round">◀ Prev</button>
+          <button class="btn btn-secondary btn-sm" id="btn-prev-round" title="Previous Round">◀ Prev Round</button>
           <div class="round-badge" id="round-indicator" aria-live="polite">Round 1 of 4</div>
-          <button class="btn btn-primary btn-sm" id="btn-next-round" title="Next Round">Next ▶</button>
+          <button class="btn btn-primary btn-sm" id="btn-next-round" title="Next Round">Next Round ▶</button>
           <button class="btn btn-secondary btn-sm" id="btn-last-round" title="Jump to Final Results">Final ⏭</button>
+        </div>
+
+        <!-- Demonstrative Sub-Step Stepper -->
+        <div class="demo-stepper-wrap" style="background: rgba(0,0,0,0.2); padding: 0.25rem 0.6rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Step:</span>
+          <button class="btn btn-ghost btn-sm" id="btn-prev-substep" title="Previous demonstrative sub-step" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">◀</button>
+          <span id="demo-substep-indicator" style="font-size: 0.785rem; font-weight: 700; color: #818cf8; min-width: 140px; text-align: center;">Stage 1 of 5</span>
+          <button class="btn btn-ghost btn-sm" id="btn-next-substep" title="Next demonstrative sub-step" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">▶</button>
         </div>
 
         <div class="playback-actions">
@@ -139,6 +164,18 @@
             <input type="range" id="speed-slider" min="500" max="3000" step="250" value="1500" aria-label="Playback animation speed">
             <span id="speed-val">1.5s</span>
           </div>
+
+          <!-- Live Voice Announcer Toggle -->
+          <button class="btn btn-secondary btn-sm" id="btn-toggle-voice" title="Read announcements aloud via speech synthesis for counting hall observers">
+            <span id="voice-icon">🎙️</span>
+            <span id="voice-label">Voice: OFF</span>
+          </button>
+
+          <!-- Printable Declaration Certificate -->
+          <button class="btn btn-secondary btn-sm" id="btn-open-certificate" title="View & Print Official Declaration of Results Certificate">
+            📜 Results Certificate
+          </button>
+
           <button class="btn btn-ghost btn-sm" id="btn-reset-election" title="Reset Simulation">Reset</button>
         </div>
       </section>
@@ -172,13 +209,18 @@
           </div>
         </div>
 
-        <!-- Right Column: Audit Log and Narrative -->
-        <div class="audit-panel" aria-label="Round Audit Log and Mathematical Narrative">
+        <!-- Right Column: Demonstrative Observer Commentary & Audit Feed -->
+        <div class="audit-panel" aria-label="Demonstrative Observer Commentary and Audit">
           <div class="panel-header">
             <h2 class="panel-title">
-              <span>Round Mathematical Audit</span>
+              <span>📢 Demonstrative Observer Commentary</span>
             </h2>
             <span class="status-tag hopeful" id="audit-round-chip">Round 1</span>
+          </div>
+
+          <!-- Demonstrative Live Step-by-Step Box (New Feature) -->
+          <div id="demo-commentary-box" class="demonstrative-box declaration">
+            <!-- Rendered dynamically by app.js -->
           </div>
 
           <!-- Highlight Action Card -->
@@ -200,222 +242,178 @@
     </section>
 
     <!-- ========================================================================= -->
-    <!-- TAB 2: BALLOT ENTRY & CANDIDATE REGISTRY VIEW (NEW DESIGN)               -->
+    <!-- TAB 2: PUBLIC NOMINAL ROLLS VIEW                                          -->
     <!-- ========================================================================= -->
-    <section id="view-ballots" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-ballots" style="display: none;">
-      
-      <!-- Top Action Bar -->
-      <div class="setup-header-card">
-        <div>
-          <h2>Electoral Setup & Digital Ballot Entry</h2>
-          <p class="text-secondary">Register candidates with department affiliation, record physical preferential ballot slips with serial numbers, and verify records.</p>
-        </div>
-        <div class="setup-header-actions">
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-all-ballots" title="Reset ballot box to 0 ballots for fresh physical entry">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-            Reset / Clear Ballots
-          </button>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample" title="Load institutional sample dataset (100 ballots and 5 candidates)">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Load Sample Data
-          </button>
-          <button type="button" class="btn btn-primary" id="btn-run-custom-election">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            Calculate & Tally Election
-          </button>
-        </div>
-      </div>
-
-      <!-- Two-Column Setup Grid -->
-      <div class="setup-grid">
-
-        <!-- Column 1: Candidates Roster & Vacancies -->
-        <div class="setup-column">
+    <section id="view-nominal" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-nominal" style="display: none;">
+      <div class="vis-panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Institutional Nominal Electoral Rolls</h2>
+            <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.2rem;">
+              Search registered voters, verify electoral eligibility, and inspect ballot issuance status across departments.
+            </p>
+          </div>
           
-          <!-- Election Parameters Card -->
-          <div class="config-card">
-            <div class="config-card-header">
-              <div class="card-icon-tag">1</div>
-              <div>
-                <h3>Election Parameters</h3>
-                <p class="config-card-sub">Define the number of vacancies to fill and quota rule.</p>
-              </div>
-            </div>
+          <div class="nominal-actions-group" id="nominal-admin-actions" style="display: flex; gap: 0.5rem; align-items: center;">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-export-nominal-csv">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export CSV
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm admin-only-btn" id="btn-open-import-csv" style="display: none;">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+              Import Roll CSV
+            </button>
+          </div>
+        </div>
 
-            <div class="form-row-compact">
-              <div class="form-group">
-                <label class="form-label" for="input-seats">Number of Vacancies (Seats):</label>
-                <div class="vacancy-stepper">
-                  <button type="button" class="btn-stepper" id="btn-seat-minus" aria-label="Decrease seats">−</button>
-                  <input type="number" id="input-seats" class="vacancy-input" value="3" min="1" max="15" readonly>
-                  <button type="button" class="btn-stepper" id="btn-seat-plus" aria-label="Increase seats">+</button>
-                </div>
-                <small class="helper-text">Vacancies must be fewer than total candidates.</small>
-              </div>
-
-              <div class="form-group">
-                <label class="form-label" for="input-quota-type">Winning Quota Formula:</label>
-                <select class="select-input" id="input-quota-type" style="width: 100%; height: 42px;">
-                  <option value="droop" selected>Droop Quota: ⌊Votes / (Vacancies + 1)⌋ + 1 (Standard)</option>
-                  <option value="hare">Hare Quota: Votes / Vacancies</option>
-                </select>
-                <small class="helper-text">Droop mathematically guarantees proportional fairness.</small>
-              </div>
-            </div>
+        <!-- Nominal Search & Filters Toolbar -->
+        <div class="nominal-toolbar">
+          <div class="nominal-search-wrap">
+            <input type="text" id="input-nominal-search" class="form-input" placeholder="Search by name, roll no, or voter ID..." aria-label="Search nominal roll">
+            <select id="select-nominal-dept" class="select-input" aria-label="Filter by department" style="min-width: 180px;">
+              <option value="">All Departments</option>
+            </select>
           </div>
 
-          <!-- Candidates Roster Card -->
-          <div class="config-card">
-            <div class="config-card-header">
-              <div class="card-icon-tag">2</div>
-              <div>
-                <h3>Candidate Roster (Department-Based)</h3>
-                <p class="config-card-sub">Add and edit candidates. All candidates appear on the official ballot paper.</p>
-              </div>
-            </div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary);" id="nominal-count-summary">
+            Showing 31 registered voters
+          </div>
+        </div>
 
-            <!-- Add Candidate Bar -->
-            <div class="add-candidate-bar">
-              <div class="add-input-wrap">
-                <input type="text" id="new-candidate-name" class="form-input" placeholder="Candidate Name (e.g. Dr. Eleanor Vance)" maxlength="36">
-              </div>
-              <div class="add-input-wrap dept-wrap">
-                <input type="text" id="new-candidate-dept" class="form-input" placeholder="Department (e.g. Computer Science)" maxlength="36">
-              </div>
-              <button type="button" class="btn btn-primary" id="btn-add-candidate">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Add Candidate
-              </button>
-            </div>
+        <!-- Table Container -->
+        <div class="nominal-table-card">
+          <div class="nominal-table-wrap">
+            <table class="nominal-table" aria-label="Voters nominal roll">
+              <thead>
+                <tr>
+                  <th>Voter ID</th>
+                  <th>Roll / Admission No</th>
+                  <th>Voter Full Name</th>
+                  <th>Department</th>
+                  <th>Semester / Class</th>
+                  <th>Eligibility Status</th>
+                  <th class="admin-only-col" style="display: none;">Admin Action</th>
+                </tr>
+              </thead>
+              <tbody id="nominal-table-body">
+                <!-- Rendered dynamically by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
 
-            <!-- Candidate Roster List with Sequence Controls -->
-            <div class="candidate-roster-header">
-              <span class="roster-count" id="roster-count-label">5 Candidates Registered</span>
-              <div class="roster-quick-actions" aria-label="Ballot sequence ordering controls">
-                <span class="roster-quick-label">Ballot Order:</span>
-                <button type="button" class="btn-roster-sort" id="btn-sort-az" title="Sort candidate names alphabetically (A to Z)">A→Z</button>
-                <button type="button" class="btn-roster-sort" id="btn-sort-dept" title="Sort candidates by Department name">Dept</button>
-                <button type="button" class="btn-roster-sort" id="btn-reverse-order" title="Reverse ballot paper candidate order">Reverse</button>
-              </div>
-            </div>
+    <!-- ========================================================================= -->
+    <!-- TAB 3: CANDIDATE NOMINATIONS PORTAL                                       -->
+    <!-- ========================================================================= -->
+    <section id="view-nomination" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-nomination" style="display: none;">
+      <div class="vis-panel" style="margin-top: 1.5rem;">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">Official Candidate Nomination Portal</h2>
+            <p class="text-secondary" style="font-size: 0.85rem; margin-top: 0.2rem;">
+              Submit statutory nominations for preferential elections, verify proposer and seconder details, and generate printable verified nomination papers.
+            </p>
+          </div>
+        </div>
 
-            <div class="candidate-roster-list" id="candidate-roster-list" role="list">
+        <div class="nomination-grid">
+          
+          <!-- Column 1: Nomination Form -->
+          <div class="nomination-form-card">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.4rem; font-family: var(--font-heading);">Submit Nomination Paper</h3>
+            <p class="text-secondary" style="font-size: 0.825rem; margin-bottom: 1.25rem;">Fill in candidate particulars with valid proposer and seconder registration numbers.</p>
+
+            <form id="form-nomination">
+              <div class="form-group">
+                <label class="form-label" for="nom-post">Election Post / Vacancy Constituency: *</label>
+                <select id="nom-post" class="select-input" style="width: 100%;" required>
+                  <option value="University Senate Representative (3 Vacancies)" selected>University Senate Representative (3 Vacancies)</option>
+                  <option value="Department Council Chairperson (2 Vacancies)">Department Council Chairperson (2 Vacancies)</option>
+                  <option value="Executive Council Dean (1 Vacancy - IRV)">Executive Council Dean (1 Vacancy - IRV)</option>
+                  <option value="Student Union General Secretary">Student Union General Secretary</option>
+                </select>
+              </div>
+
+              <div class="nom-subheading">Candidate Particulars</div>
+              <div class="form-row-compact">
+                <div class="form-group">
+                  <label class="form-label" for="nom-cand-name">Candidate Full Name: *</label>
+                  <input type="text" id="nom-cand-name" class="form-input" placeholder="e.g. Dr. Eleanor Vance" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="nom-cand-roll">Roll / Admission / Staff No: *</label>
+                  <input type="text" id="nom-cand-roll" class="form-input" placeholder="e.g. 24-CS-001" required>
+                </div>
+              </div>
+
+              <div class="form-row-compact">
+                <div class="form-group">
+                  <label class="form-label" for="nom-cand-dept">Department: *</label>
+                  <input type="text" id="nom-cand-dept" class="form-input" placeholder="e.g. Computer Science" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="nom-cand-class">Class / Designation: *</label>
+                  <input type="text" id="nom-cand-class" class="form-input" placeholder="e.g. Semester 5 / Faculty" required>
+                </div>
+              </div>
+
+              <div class="nom-subheading">Proposer & Seconder Details</div>
+              <div class="form-row-compact">
+                <div class="form-group">
+                  <label class="form-label" for="nom-prop-name">Proposer Name: *</label>
+                  <input type="text" id="nom-prop-name" class="form-input" placeholder="Name of proposer" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="nom-prop-roll">Proposer Roll No: *</label>
+                  <input type="text" id="nom-prop-roll" class="form-input" placeholder="e.g. 24-CS-002" required>
+                </div>
+              </div>
+
+              <div class="form-row-compact">
+                <div class="form-group">
+                  <label class="form-label" for="nom-sec-name">Seconder Name: *</label>
+                  <input type="text" id="nom-sec-name" class="form-input" placeholder="Name of seconder" required>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="nom-sec-roll">Seconder Roll No: *</label>
+                  <input type="text" id="nom-sec-roll" class="form-input" placeholder="e.g. 24-CS-003" required>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 1rem;">
+                <label style="display: flex; gap: 0.5rem; align-items: flex-start; font-size: 0.825rem; color: var(--text-secondary); cursor: pointer;">
+                  <input type="checkbox" id="nom-declaration" required style="margin-top: 0.2rem;">
+                  <span>I hereby declare that I consent to this nomination, am qualified under the institution's preferential electoral constitution, and have not been disqualified.</span>
+                </label>
+              </div>
+
+              <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                  <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                  Generate & Submit Official Nomination Paper
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Column 2: Scrutinized Nominations List -->
+          <div class="nomination-form-card">
+            <h3 style="font-size: 1.1rem; margin-bottom: 0.4rem; font-family: var(--font-heading);">Filed Nominations Registry</h3>
+            <p class="text-secondary" style="font-size: 0.825rem; margin-bottom: 1.25rem;">Official registry of received nomination papers and scrutiny status.</p>
+
+            <div id="nominations-list-container" style="display: flex; flex-direction: column; gap: 0.85rem; max-height: 520px; overflow-y: auto;">
               <!-- Rendered dynamically by app.js -->
             </div>
           </div>
 
         </div>
-
-        <!-- Column 2: Digital Ballot Paper Entry Form & Serial Registry -->
-        <div class="setup-column">
-          
-          <!-- Official Preferential Ballot Paper Entry Card -->
-          <div class="config-card ballot-paper-card">
-            <div class="ballot-paper-banner">
-              <div class="ballot-paper-header-left">
-                <div class="official-seal">BALLOT</div>
-                <div>
-                  <h3 class="ballot-paper-title">Official Preferential Ballot Paper</h3>
-                  <div class="ballot-paper-instruction">
-                    Mark your order of preference (1, 2, 3...) in the boxes beside candidate names.
-                  </div>
-                </div>
-              </div>
-              <div class="ballot-serial-badge">
-                <span class="serial-label">Serial Number:</span>
-                <input type="text" id="input-ballot-serial" class="serial-input" value="BAL-0101" title="Editable Serial Number">
-              </div>
-            </div>
-
-            <!-- Ballot Paper Candidates List with Numeric Order Entry (Name 1st, then Preference) -->
-            <div class="ballot-paper-body">
-              <!-- Duplicate preference warning banner -->
-              <div id="ballot-validation-warning" class="ballot-validation-warning" style="display: none;">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                <span id="ballot-validation-warning-text">Duplicate preference number detected. Each candidate must have a unique preference.</span>
-              </div>
-
-              <div class="ballot-candidate-table-header">
-                <span># · Candidate Sequence & Department</span>
-                <span>Preference Number (1, 2, 3...)</span>
-              </div>
-              <div class="ballot-candidate-inputs" id="ballot-candidate-inputs">
-                <!-- Dynamically generated list of candidate rows with numeric inputs -->
-              </div>
-            </div>
-
-            <!-- Ballot Submission Action Row (One Ballot Per Physical Slip) -->
-            <div class="ballot-submit-bar">
-              <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-ballot-form">Clear Preferences</button>
-              <div class="ballot-submit-actions">
-                <button type="button" class="btn btn-primary" id="btn-record-ballot">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                  Add Ballot Slip (<span id="btn-serial-label">BAL-0101</span>)
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Serialized Ballot Registry Table & Search/Verification -->
-          <div class="config-card">
-            <div class="config-card-header" style="justify-content: space-between;">
-              <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <div class="card-icon-tag">4</div>
-                <div>
-                  <h3>Serialized Ballot Registry & Audit Log</h3>
-                  <p class="config-card-sub">Every entered ballot is stored with its unique serial number for verification.</p>
-                </div>
-              </div>
-              <div class="ballot-box-total-pill" id="ballot-box-total-pill">100 Total Ballots</div>
-            </div>
-
-            <!-- Search & Verification Bar -->
-            <div class="ballot-search-bar">
-              <div class="search-input-wrap">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" id="search-ballot-input" class="form-input search-input" placeholder="Search by Serial Number (e.g. BAL-0012) or candidate name...">
-              </div>
-              <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-search">Clear</button>
-            </div>
-
-            <!-- Registry Table (1 Physical Ballot Per Row) -->
-            <div class="ballot-registry-table-wrapper">
-              <table class="ballot-table" id="ballot-table">
-                <thead>
-                  <tr>
-                    <th style="width: 120px;">Serial No.</th>
-                    <th>Ranked Preferences Marked</th>
-                    <th style="width: 100px; text-align: right;">Audit Action</th>
-                  </tr>
-                </thead>
-                <tbody id="ballot-table-body">
-                  <!-- Rendered dynamically by app.js -->
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Advanced Raw Textarea Toggle -->
-            <div class="raw-toggle-wrapper">
-              <button type="button" class="btn-link" id="btn-toggle-raw-editor">
-                <span>Show / Hide Raw Export & Import</span>
-              </button>
-              <div class="raw-editor-container" id="raw-editor-container" style="display: none;">
-                <textarea class="form-textarea" id="textarea-ballots" spellcheck="false" aria-label="Raw Ballot Text Format"></textarea>
-                <div class="raw-actions">
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-apply-raw">Apply Raw Ballots</button>
-                  <button type="button" class="btn btn-secondary btn-sm" id="btn-export-json">Export Registry JSON</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-
       </div>
     </section>
 
     <!-- ========================================================================= -->
-    <!-- TAB 3: PRIMER & EXPLAINER VIEW                                            -->
+    <!-- TAB 4: PRIMER & EXPLAINER VIEW                                            -->
     <!-- ========================================================================= -->
     <section id="view-primer" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-primer" style="display: none;">
       <div class="vis-panel" style="margin-top: 1.5rem;">
@@ -425,7 +423,7 @@
         
         <div class="primer-content">
           <p class="lead-para">
-            The <strong>Single Transferable Vote (STV)</strong> is a proportional preferential electoral system utilized internationally for university senates, municipal councils, and national parliaments. It allows electors to express preferences freely without risk of vote splitting or strategic voting.
+            The <strong>Single Transferable Vote (STV)</strong> is a proportional preferential electoral system utilized internationally for university senates, municipal councils, and parliamentary assemblies. It empowers electors to rank multiple candidates in order of preference (1, 2, 3...) ensuring that no vote is wasted.
           </p>
 
           <div class="kpi-grid" style="margin: 1.25rem 0;">
@@ -438,9 +436,9 @@
             </div>
 
             <div class="kpi-card seats">
-              <h3 class="primer-card-title">2. Fractional Transfer Value</h3>
+              <h3 class="primer-card-title">2. Fractional Surplus Transfers (Gregory Method)</h3>
               <p class="primer-card-desc">
-                Surplus votes are transferred down to subsequent candidate preferences at a fractional value:
+                Surplus votes above quota are transferred to voters' 2nd and subsequent preferences scaled by the transfer factor:
               </p>
               <div class="formula-box">$$\text{Transfer Factor} = \frac{\text{Votes Received} - \text{Quota}}{\text{Votes Received}}$$</div>
             </div>
@@ -448,7 +446,7 @@
             <div class="kpi-card">
               <h3 class="primer-card-title">3. Lowest Candidate Elimination</h3>
               <p class="primer-card-desc">
-                If no hopeful candidate reaches the quota, the lowest-polling candidate is eliminated. Their ballots transfer at 100% of their current value to next active preferences.
+                When no active candidate reaches quota, the trailing candidate is eliminated. Their ballots transfer at 100% of their current value to next continuing preferences.
               </p>
             </div>
           </div>
@@ -463,7 +461,329 @@
       </div>
     </section>
 
+    <!-- ========================================================================= -->
+    <!-- TAB 5: BALLOT ENTRY & ADMIN SETUP VIEW (PASSWORD PROTECTED)              -->
+    <!-- ========================================================================= -->
+    <section id="view-ballots" class="tab-view" role="tabpanel" aria-labelledby="tab-btn-ballots" style="display: none;">
+      
+      <!-- Lockout Gate for Non-Authenticated Users -->
+      <div id="admin-lockout-gate" class="admin-lockout-card">
+        <div class="lockout-icon">🔐</div>
+        <h2 class="lockout-title">Returning Officer Access Required</h2>
+        <p class="lockout-subtitle">
+          The Ballot Box Entry and Electoral Configuration area is restricted to authorized returning officers and scrutiny staff.
+        </p>
+        <div style="max-width: 280px; margin: 0 auto;">
+          <input type="password" id="gate-passcode-input" class="form-input" placeholder="Enter officer passcode..." style="text-align: center; margin-bottom: 0.75rem;">
+          <button type="button" class="btn btn-primary" id="btn-gate-unlock" style="width: 100%;">
+            Unlock Officer Portal
+          </button>
+          <div style="margin-top: 0.6rem; font-size: 0.75rem; color: var(--text-muted);">
+            Default Passcode: <code>admin2026</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- Authenticated Content Container -->
+      <div id="admin-authenticated-content" style="display: none;">
+        
+        <!-- Top Action Bar -->
+        <div class="setup-header-card">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.6rem;">
+              <h2>Electoral Setup & Digital Ballot Entry</h2>
+              <span class="role-badge admin" style="font-size: 0.75rem;">Officer Mode Active</span>
+            </div>
+            <p class="text-secondary">Register candidates with department affiliation, record physical preferential ballot slips with serial numbers, and verify records.</p>
+          </div>
+          <div class="setup-header-actions">
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-change-pwd" title="Change Admin Passcode">
+              🔑 Change Passcode
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-clear-all-ballots" title="Reset ballot box to 0 ballots for fresh physical entry">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              Reset / Clear Ballots
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" id="btn-load-sample" title="Load institutional sample dataset (100 ballots and 5 candidates)">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              Load Sample Data
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-run-custom-election">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Calculate & Tally Election
+            </button>
+          </div>
+        </div>
+
+        <!-- Two-Column Setup Grid -->
+        <div class="setup-grid">
+
+          <!-- Column 1: Candidates Roster & Vacancies -->
+          <div class="setup-column">
+            
+            <!-- Election Parameters Card -->
+            <div class="config-card">
+              <div class="config-card-header">
+                <div class="card-icon-tag">1</div>
+                <div>
+                  <h3>Election Parameters</h3>
+                  <p class="config-card-sub">Define the number of vacancies to fill and quota rule.</p>
+                </div>
+              </div>
+
+              <div class="form-row-compact">
+                <div class="form-group">
+                  <label class="form-label" for="input-seats">Number of Vacancies (Seats):</label>
+                  <div class="vacancy-stepper">
+                    <button type="button" class="btn-stepper" id="btn-seat-minus" aria-label="Decrease seats">−</button>
+                    <input type="number" id="input-seats" class="vacancy-input" value="3" min="1" max="15" readonly>
+                    <button type="button" class="btn-stepper" id="btn-seat-plus" aria-label="Increase seats">+</button>
+                  </div>
+                  <small class="helper-text">Vacancies must be fewer than total candidates.</small>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="input-quota-type">Winning Quota Formula:</label>
+                  <select class="select-input" id="input-quota-type" style="width: 100%; height: 42px;">
+                    <option value="droop" selected>Droop Quota: ⌊Votes / (Vacancies + 1)⌋ + 1 (Standard)</option>
+                    <option value="hare">Hare Quota: Votes / Vacancies</option>
+                  </select>
+                  <small class="helper-text">Droop quota guarantees mathematical stability.</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Candidates Roster Card -->
+            <div class="config-card">
+              <div class="config-card-header">
+                <div class="card-icon-tag">2</div>
+                <div>
+                  <h3>Candidates Roster & Slate</h3>
+                  <p class="config-card-sub">Manage registered candidate profiles and department affiliations.</p>
+                </div>
+              </div>
+
+              <!-- Add Candidate Bar -->
+              <div class="add-candidate-bar">
+                <input type="text" class="form-input" id="input-new-candidate-name" placeholder="Candidate Name (e.g. Dr. Eleanor Vance)" aria-label="Candidate Name">
+                <input type="text" class="form-input" id="input-new-candidate-dept" placeholder="Department (e.g. Physics)" aria-label="Department Affiliation" style="max-width: 170px;">
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-add-candidate">
+                  + Add
+                </button>
+              </div>
+
+              <!-- Candidates Roster List -->
+              <div class="candidate-roster-list" id="candidate-roster-list" role="list">
+                <!-- Rendered dynamically by app.js -->
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Column 2: Digital Preferential Ballot Paper Entry -->
+          <div class="setup-column">
+            
+            <div class="config-card">
+              <div class="config-card-header">
+                <div class="card-icon-tag">3</div>
+                <div>
+                  <h3>Physical Ballot Paper Entry</h3>
+                  <p class="config-card-sub">Type the preference numbers (1, 2, 3...) as marked on the physical paper ballot slip.</p>
+                </div>
+              </div>
+
+              <!-- Serial and Count Bar -->
+              <div class="ballot-serial-row">
+                <div class="serial-input-group">
+                  <label for="input-ballot-serial">Ballot Serial #:</label>
+                  <input type="text" id="input-ballot-serial" class="form-input" value="BAL-0101" style="font-family: var(--font-mono); width: 140px; font-weight: 700;">
+                </div>
+                <div class="serial-input-group">
+                  <label for="input-ballot-count">Multiplier / Bundle:</label>
+                  <input type="number" id="input-ballot-count" class="form-input" value="1" min="1" max="5000" style="width: 80px; text-align: center;">
+                </div>
+                <button type="button" class="btn btn-primary" id="btn-record-ballot" style="height: 42px;">
+                  + Log Ballot
+                </button>
+              </div>
+
+              <!-- Candidate Ballot Paper Rows Form -->
+              <div class="ballot-paper-form" id="ballot-candidate-inputs">
+                <!-- Rendered dynamically by app.js -->
+              </div>
+
+              <!-- Duplicate Rank Alert Bar -->
+              <div id="duplicate-rank-alert" class="rank-duplicate-alert" style="display: none;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <span>Warning: You have assigned preference <strong id="duplicate-rank-number">1</strong> to more than one candidate. Please correct before submitting.</span>
+              </div>
+            </div>
+
+            <!-- Serialized Ballot Box Table -->
+            <div class="config-card">
+              <div class="config-card-header" style="justify-content: space-between;">
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                  <div class="card-icon-tag">4</div>
+                  <div>
+                    <h3>Serialized Ballot Box Registry</h3>
+                    <p class="config-card-sub">Audit trail of verified paper ballots deposited in the box.</p>
+                  </div>
+                </div>
+                <div class="ballot-box-total" id="ballot-box-total-pill">100 Total Ballots</div>
+              </div>
+
+              <div class="ballot-table-wrap">
+                <table class="ballot-log-table" aria-label="Ballots logged in system">
+                  <thead>
+                    <tr>
+                      <th style="width: 140px;">Serial / Slip ID</th>
+                      <th style="width: 70px;">Count</th>
+                      <th>Ranked Preferences</th>
+                      <th style="width: 100px; text-align: right;">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="ballot-table-body">
+                    <!-- Rendered dynamically by app.js -->
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Raw Import / Export Collapsible -->
+              <button type="button" class="btn-toggle-raw" id="btn-toggle-raw">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+                <span>Show / Hide Raw Export & Import</span>
+              </button>
+              <div class="raw-editor-container" id="raw-editor-container" style="display: none;">
+                <textarea class="form-textarea" id="textarea-ballots" spellcheck="false" aria-label="Raw Ballot Text Format"></textarea>
+                <div class="raw-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-apply-raw">Apply Raw Ballots</button>
+                  <button type="button" class="btn btn-secondary btn-sm" id="btn-export-json">Export Registry JSON</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
   </main>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: RETURNING OFFICER LOGIN                                            -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-admin-login" role="dialog" aria-modal="true" aria-labelledby="modal-login-title">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-login-title">Returning Officer Login</h2>
+        <button class="btn btn-ghost btn-icon" id="btn-close-login-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <div>
+        <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 1.25rem;">
+          Enter the official administrator passcode to unlock candidate roster management and paper ballot logging.
+        </p>
+        <div class="form-group">
+          <label class="form-label" for="login-passcode">Officer Passcode:</label>
+          <input type="password" id="login-passcode" class="form-input" placeholder="Enter passcode..." autocomplete="current-password">
+          <small class="helper-text">Default Passcode: <code>admin2026</code></small>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-login">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-submit-login">Unlock Officer Portal</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: CHANGE ADMIN PASSCODE                                              -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-change-password" role="dialog" aria-modal="true" aria-labelledby="modal-pwd-title">
+    <div class="modal-content" style="max-width: 420px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-pwd-title">Change Officer Passcode</h2>
+        <button class="btn btn-ghost btn-icon" id="btn-close-pwd-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <div>
+        <div class="form-group">
+          <label class="form-label" for="pwd-current">Current Passcode:</label>
+          <input type="password" id="pwd-current" class="form-input" placeholder="Current passcode">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pwd-new">New Passcode (min. 4 chars):</label>
+          <input type="password" id="pwd-new" class="form-input" placeholder="New passcode">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-pwd">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-save-pwd">Save Passcode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: PRINTABLE NOMINATION SLIP                                          -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-nomination-slip" role="dialog" aria-modal="true" aria-labelledby="modal-nom-title">
+    <div class="modal-content" style="max-width: 780px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-nom-title">Official Candidate Nomination Paper</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-print-nom-slip">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print / Save PDF
+          </button>
+          <button class="btn btn-ghost btn-icon" id="btn-close-nom-modal" aria-label="Close dialog">✕</button>
+        </div>
+      </div>
+      <div id="nomination-slip-render-target" style="max-height: 75vh; overflow-y: auto; padding: 0.5rem;">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: OFFICIAL DECLARATION OF RESULTS CERTIFICATE                        -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-election-certificate" role="dialog" aria-modal="true" aria-labelledby="modal-cert-title">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-cert-title">Declaration of Election Results & Audit Certificate</h2>
+        <div style="display: flex; gap: 0.5rem;">
+          <button type="button" class="btn btn-primary btn-sm" id="btn-print-election-certificate">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+            Print Official Sheet
+          </button>
+          <button class="btn btn-ghost btn-icon" id="btn-close-cert-modal" aria-label="Close dialog">✕</button>
+        </div>
+      </div>
+      <div id="certificate-render-target" style="max-height: 75vh; overflow-y: auto; padding: 0.5rem;">
+        <!-- Rendered dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: IMPORT NOMINAL ROLL CSV                                            -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-import-csv" role="dialog" aria-modal="true" aria-labelledby="modal-csv-title">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <h2 class="modal-title" id="modal-csv-title">Import Electoral Roll CSV</h2>
+        <button class="btn btn-ghost btn-icon" id="btn-close-csv-modal" aria-label="Close dialog">✕</button>
+      </div>
+      <div>
+        <p class="text-secondary" style="font-size: 0.85rem; margin-bottom: 0.75rem;">
+          Paste CSV text with columns: <code>RollNo, FullName, Department, Semester</code>
+        </p>
+        <textarea id="csv-import-textarea" class="form-textarea" style="height: 180px; font-family: var(--font-mono); font-size: 0.825rem;" placeholder="RollNo,FullName,Department,Semester&#10;24-CS-101,Anjali Nair,Computer Science,Semester 3&#10;24-PH-102,David John,Physics,Semester 5"></textarea>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-csv">Cancel</button>
+          <button type="button" class="btn btn-primary" id="btn-submit-csv-import">Import & Replace Roll</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ========================================================================= -->
   <!-- MODAL: EDIT CANDIDATE DETAILS                                             -->
@@ -514,8 +834,9 @@
         <strong>ELECTORATE STV Preferential Electoral Platform</strong> &bull; Departmental Preferential System &bull; Inclusive Gregory Fractional Method
       </div>
       <div class="footer-links">
-        <a href="#view-simulation" id="link-footer-sim">Tally Simulation</a>
-        <a href="#view-ballots" id="link-footer-ballots">Ballot Registry & Audit</a>
+        <a href="#view-simulation" id="link-footer-sim">Live Tally</a>
+        <a href="#view-nominal" id="link-footer-nominal">Nominal Rolls</a>
+        <a href="#view-nomination" id="link-footer-nomination">Candidate Nominations</a>
         <a href="#view-primer" id="link-footer-primer">STV Rules</a>
       </div>
     </div>

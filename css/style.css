@@ -1854,3 +1854,544 @@ body {
   -webkit-backdrop-filter: blur(12px);
   color: #fbbf24;
 }
+
+/* ==========================================================================
+   ROLE BADGES & RETURNING OFFICER AUTHENTICATION
+   ========================================================================== */
+
+.role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 0.85rem;
+  border-radius: var(--radius-full);
+  font-size: 0.785rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--border-medium);
+  background: var(--bg-surface-elevated);
+  transition: all var(--transition-fast);
+}
+
+.role-badge.public {
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.3);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.role-badge.admin {
+  color: #34d399;
+  border-color: rgba(52, 211, 153, 0.4);
+  background: rgba(52, 211, 153, 0.12);
+  box-shadow: 0 0 15px rgba(52, 211, 153, 0.2);
+}
+
+.btn-auth-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+/* Admin Lockout Screen */
+.admin-lockout-card {
+  max-width: 480px;
+  margin: 3.5rem auto;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem 2rem;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+}
+
+.lockout-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: rgba(79, 70, 229, 0.15);
+  border: 1px solid rgba(79, 70, 229, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.25rem;
+  font-size: 1.8rem;
+}
+
+.lockout-title {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.lockout-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.5;
+}
+
+/* ==========================================================================
+   DEMONSTRATIVE STAGE & OBSERVER COMMENTARY
+   ========================================================================== */
+
+.demonstrative-box {
+  background: var(--bg-surface-elevated);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-fast);
+}
+
+.demonstrative-box.declaration {
+  border-color: rgba(52, 211, 153, 0.5);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, var(--bg-surface-elevated) 100%);
+}
+
+.demonstrative-box.elimination {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, var(--bg-surface-elevated) 100%);
+}
+
+.demo-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.demo-stage-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: rgba(99, 102, 241, 0.15);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+}
+
+.demo-stepper-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.demo-quote-bubble {
+  position: relative;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-left: 4px solid var(--accent-primary);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.15rem;
+  margin-bottom: 0.9rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.demo-quote-bubble.announcement {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.demo-quote-bubble.elimination {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.demo-quote-icon {
+  display: inline-block;
+  margin-right: 0.4rem;
+  font-size: 1.1rem;
+}
+
+.demo-math-card {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.65rem;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 0.9rem;
+}
+
+.demo-math-item {
+  text-align: center;
+}
+
+.demo-math-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.2rem;
+}
+
+.demo-math-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: #f1f5f9;
+}
+
+.demo-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  margin-top: 0.5rem;
+}
+
+.demo-transfer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.825rem;
+  text-align: left;
+}
+
+.demo-transfer-table th {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+  padding: 0.5rem 0.75rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.demo-transfer-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.demo-transfer-table tr:last-child td {
+  border-bottom: none;
+}
+
+.demo-transfer-table .val-highlight {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: #34d399;
+}
+
+/* Voice Toggle Button Animation */
+.btn-voice-active {
+  background: rgba(16, 185, 129, 0.2) !important;
+  color: #34d399 !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  animation: pulse-border 2s infinite;
+}
+
+@keyframes pulse-border {
+  0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* ==========================================================================
+   NOMINAL ROLLS MODULE
+   ========================================================================== */
+
+.nominal-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.nominal-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 260px;
+}
+
+.nominal-table-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+
+.nominal-table-wrap {
+  overflow-x: auto;
+  max-height: 600px;
+}
+
+.nominal-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  text-align: left;
+}
+
+.nominal-table th {
+  position: sticky;
+  top: 0;
+  background: var(--bg-surface-elevated);
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-medium);
+  z-index: 10;
+}
+
+.nominal-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.nominal-table tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.status-badge-eligible {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge-issued {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* ==========================================================================
+   NOMINATION PORTAL & PRINTABLE SLIP
+   ========================================================================== */
+
+.nomination-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .nomination-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nomination-form-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.nom-subheading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+/* Printable Official Slip */
+.nomination-slip-document {
+  background: #ffffff;
+  color: #0f172a;
+  padding: 2.25rem;
+  border-radius: 8px;
+  border: 2px solid #0f172a;
+  font-family: 'Times New Roman', Georgia, serif;
+  line-height: 1.45;
+}
+
+.nom-slip-header {
+  text-align: center;
+  border-bottom: 2px solid #0f172a;
+  padding-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.nom-slip-emblem {
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.nom-slip-heading {
+  font-size: 1.35rem;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.nom-slip-subheading {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-top: 0.25rem;
+}
+
+.nom-slip-badge {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #475569;
+  margin-top: 0.35rem;
+}
+
+.nom-meta-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+  background: #f1f5f9;
+  padding: 0.6rem 0.85rem;
+  border-radius: 4px;
+  margin-bottom: 1.25rem;
+  border: 1px solid #cbd5e1;
+}
+
+.nom-section-title {
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #e2e8f0;
+  padding: 0.3rem 0.6rem;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  border-left: 4px solid #0f172a;
+}
+
+.nom-box {
+  background: #fafafa;
+  border: 1px solid #cbd5e1;
+  padding: 0.65rem 0.85rem;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.nom-field-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.nom-field-value {
+  font-size: 0.95rem;
+  color: #0f172a;
+  margin-top: 0.2rem;
+}
+
+.nom-field-value.large {
+  font-size: 1.1rem;
+}
+
+.nom-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.nom-declaration-box {
+  font-size: 0.88rem;
+  padding: 0.85rem;
+  border: 1px solid #94a3b8;
+  border-radius: 4px;
+  background: #f8fafc;
+  line-height: 1.5;
+}
+
+.sign-line-placeholder {
+  border-top: 1px dashed #64748b;
+  margin-top: 2rem;
+  padding-top: 0.35rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: center;
+  font-style: italic;
+}
+
+.nom-slip-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1.75rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #cbd5e1;
+}
+
+.officer-seal-box {
+  text-align: center;
+}
+
+.seal-circle {
+  width: 110px;
+  height: 110px;
+  border: 2px dashed #0f172a;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: bold;
+  text-align: center;
+  color: #334155;
+  margin: 0 auto;
+}
+
+.seal-caption {
+  font-size: 0.75rem;
+  font-weight: bold;
+  margin-top: 0.4rem;
+}
+
+/* Print styling */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-nomination-slip,
+  #printable-nomination-slip * {
+    visibility: visible;
+  }
+  #printable-nomination-slip {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 1.5cm;
+    border: none;
+    box-shadow: none;
+  }
+}
+

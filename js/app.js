@@ -1,14 +1,19 @@
 /**
  * ELECTORATE STV - Preferential Electoral & Audit Platform
  * =========================================================
- * Features:
- * - Candidate Department Affiliations & Real-Time Details Editing
- * - Digital Preferential Ballot Paper Entry with Numeric Preference Ranking
- * - Serialized Ballot Box Registry with Search & Audit Verification Slips
+ * Integrated System:
+ * - Returning Officer Password Protection & Role Separation
+ * - Public Nominal Electoral Rolls Directory & CSV Management
+ * - Candidate Statutory Nomination Portal & Printable Form Papers
  * - Inclusive Gregory Fractional STV Engine with Droop Quota
+ * - Demonstrative Step-by-Step Live Observer Commentary & Speech Synthesizer
+ * - Official Return of Election Declaration Certificate Generator
  */
 
 import { STVElection, Ballot, CandidateStatus } from './stv.js';
+import { AuthService } from './auth.js';
+import { NominalRollService } from './nominal.js';
+import { NominationService } from './nomination.js';
 
 // Curated Professional Slate Colors
 const SLATE_COLORS = [
@@ -77,6 +82,11 @@ const PRESETS = {
 
 class STVApp {
   constructor() {
+    // Services
+    this.authService = new AuthService();
+    this.nominalService = new NominalRollService();
+    this.nominationService = new NominationService();
+
     this.currentPresetKey = 'faculty_senate';
     this.candidates = [];
     this.seats = 3;
@@ -90,23 +100,92 @@ class STVApp {
     // Simulation state
     this.electionResult = null;
     this.currentRoundIdx = 0;
+    this.currentSubstepIdx = 0;
     this.isPlaying = false;
     this.playTimer = null;
     this.speedMs = 1500;
 
+    // Voice Announcer
+    this.voiceEnabled = false;
+
     this.cacheDom();
     this.bindEvents();
+    this.updateAuthUi();
+    this.initNominalRollUi();
+    this.initNominationUi();
     this.loadPreset('faculty_senate');
   }
 
   cacheDom() {
-    // Navigation
+    // Navigation & Views
     this.tabBtnSim = document.getElementById('tab-btn-sim');
-    this.tabBtnBallots = document.getElementById('tab-btn-ballots');
+    this.tabBtnNominal = document.getElementById('tab-btn-nominal');
+    this.tabBtnNomination = document.getElementById('tab-btn-nomination');
     this.tabBtnPrimer = document.getElementById('tab-btn-primer');
+    this.tabBtnBallots = document.getElementById('tab-btn-ballots');
+    this.tabLockIcon = document.getElementById('tab-lock-icon');
+
     this.viewSim = document.getElementById('view-simulation');
-    this.viewBallots = document.getElementById('view-ballots');
+    this.viewNominal = document.getElementById('view-nominal');
+    this.viewNomination = document.getElementById('view-nomination');
     this.viewPrimer = document.getElementById('view-primer');
+    this.viewBallots = document.getElementById('view-ballots');
+
+    // Role & Auth Elements
+    this.roleBadge = document.getElementById('role-badge');
+    this.roleBadgeText = document.getElementById('role-badge-text');
+    this.btnAuthToggle = document.getElementById('btn-auth-toggle');
+    this.authBtnIcon = document.getElementById('auth-btn-icon');
+    this.authBtnLabel = document.getElementById('auth-btn-label');
+    this.adminLockoutGate = document.getElementById('admin-lockout-gate');
+    this.adminAuthenticatedContent = document.getElementById('admin-authenticated-content');
+    this.gatePasscodeInput = document.getElementById('gate-passcode-input');
+    this.btnGateUnlock = document.getElementById('btn-gate-unlock');
+
+    // Modals
+    this.modalAdminLogin = document.getElementById('modal-admin-login');
+    this.loginPasscode = document.getElementById('login-passcode');
+    this.btnSubmitLogin = document.getElementById('btn-submit-login');
+    this.btnCancelLogin = document.getElementById('btn-cancel-login');
+    this.btnCloseLoginModal = document.getElementById('btn-close-login-modal');
+
+    this.modalChangePwd = document.getElementById('modal-change-password');
+    this.btnChangePwd = document.getElementById('btn-change-pwd');
+    this.pwdCurrent = document.getElementById('pwd-current');
+    this.pwdNew = document.getElementById('pwd-new');
+    this.btnSavePwd = document.getElementById('btn-save-pwd');
+    this.btnCancelPwd = document.getElementById('btn-cancel-pwd');
+    this.btnClosePwdModal = document.getElementById('btn-close-pwd-modal');
+
+    this.modalNominationSlip = document.getElementById('modal-nomination-slip');
+    this.nominationSlipRenderTarget = document.getElementById('nomination-slip-render-target');
+    this.btnPrintNomSlip = document.getElementById('btn-print-nom-slip');
+    this.btnCloseNomModal = document.getElementById('btn-close-nom-modal');
+
+    this.modalElectionCertificate = document.getElementById('modal-election-certificate');
+    this.certificateRenderTarget = document.getElementById('certificate-render-target');
+    this.btnOpenCertificate = document.getElementById('btn-open-certificate');
+    this.btnPrintElectionCertificate = document.getElementById('btn-print-election-certificate');
+    this.btnCloseCertModal = document.getElementById('btn-close-cert-modal');
+
+    this.modalImportCsv = document.getElementById('modal-import-csv');
+    this.btnOpenImportCsv = document.getElementById('btn-open-import-csv');
+    this.csvImportTextarea = document.getElementById('csv-import-textarea');
+    this.btnSubmitCsvImport = document.getElementById('btn-submit-csv-import');
+    this.btnCancelCsv = document.getElementById('btn-cancel-csv');
+    this.btnCloseCsvModal = document.getElementById('btn-close-csv-modal');
+
+    this.modalEditCandidate = document.getElementById('modal-edit-candidate');
+    this.editCandidateId = document.getElementById('edit-candidate-id');
+    this.editCandidateName = document.getElementById('edit-candidate-name');
+    this.editCandidateDept = document.getElementById('edit-candidate-dept');
+    this.btnSaveEditCandidate = document.getElementById('btn-save-edit-candidate');
+    this.btnCancelEditCandidate = document.getElementById('btn-cancel-edit-candidate');
+    this.btnCloseEditModal = document.getElementById('btn-close-edit-modal');
+
+    this.modalAuditBallot = document.getElementById('modal-audit-ballot');
+    this.ballotAuditSlipContent = document.getElementById('ballot-audit-slip-content');
+    this.btnCloseAuditModal = document.getElementById('btn-close-audit-modal');
 
     this.selectPreset = document.getElementById('select-preset');
 
@@ -120,11 +199,15 @@ class STVApp {
     this.kpiRoundNum = document.getElementById('kpi-round-num');
     this.kpiTotalRounds = document.getElementById('kpi-total-rounds');
 
-    // Stepper Controls
+    // Stepper & Playback Controls
     this.btnPrev = document.getElementById('btn-prev-round');
     this.btnNext = document.getElementById('btn-next-round');
     this.btnFirst = document.getElementById('btn-first-round');
     this.btnLast = document.getElementById('btn-last-round');
+    this.btnPrevSubstep = document.getElementById('btn-prev-substep');
+    this.btnNextSubstep = document.getElementById('btn-next-substep');
+    this.demoSubstepIndicator = document.getElementById('demo-substep-indicator');
+
     this.btnPlayPause = document.getElementById('btn-play-pause');
     this.playPauseIcon = document.getElementById('play-pause-icon');
     this.playPauseText = document.getElementById('play-pause-text');
@@ -133,17 +216,34 @@ class STVApp {
     this.btnReset = document.getElementById('btn-reset-election');
     this.roundIndicator = document.getElementById('round-indicator');
 
+    // Voice Announcer
+    this.btnToggleVoice = document.getElementById('btn-toggle-voice');
+    this.voiceIcon = document.getElementById('voice-icon');
+    this.voiceLabel = document.getElementById('voice-label');
+
     // Visualization elements
     this.candidatesContainer = document.getElementById('candidates-container');
     this.quotaBadgePill = document.getElementById('quota-badge-pill');
     this.exhaustedVotesCount = document.getElementById('exhausted-votes-count');
 
-    // Audit Panel
+    // Demonstrative Commentary & Audit
+    this.demoCommentaryBox = document.getElementById('demo-commentary-box');
     this.auditRoundChip = document.getElementById('audit-round-chip');
     this.auditActionTitle = document.getElementById('audit-action-title');
     this.auditActionDesc = document.getElementById('audit-action-desc');
     this.auditActionBanner = document.getElementById('audit-action-banner');
     this.timelineFeed = document.getElementById('timeline-feed');
+
+    // Nominal Rolls elements
+    this.inputNominalSearch = document.getElementById('input-nominal-search');
+    this.selectNominalDept = document.getElementById('select-nominal-dept');
+    this.nominalCountSummary = document.getElementById('nominal-count-summary');
+    this.nominalTableBody = document.getElementById('nominal-table-body');
+    this.btnExportNominalCsv = document.getElementById('btn-export-nominal-csv');
+
+    // Candidate Nominations elements
+    this.formNomination = document.getElementById('form-nomination');
+    this.nominationsListContainer = document.getElementById('nominations-list-container');
 
     // Setup: Vacancy Stepper
     this.inputSeats = document.getElementById('input-seats');
@@ -151,101 +251,84 @@ class STVApp {
     this.btnSeatPlus = document.getElementById('btn-seat-plus');
     this.inputQuotaType = document.getElementById('input-quota-type');
 
-    // Setup: Add Candidate
-    this.inputNewCandName = document.getElementById('new-candidate-name');
-    this.inputNewCandDept = document.getElementById('new-candidate-dept');
+    // Setup: Candidates
+    this.inputNewCandName = document.getElementById('input-new-candidate-name');
+    this.inputNewCandDept = document.getElementById('input-new-candidate-dept');
     this.btnAddCandidate = document.getElementById('btn-add-candidate');
     this.candidateRosterList = document.getElementById('candidate-roster-list');
-    this.rosterCountLabel = document.getElementById('roster-count-label');
-    this.btnSortAz = document.getElementById('btn-sort-az');
-    this.btnSortDept = document.getElementById('btn-sort-dept');
-    this.btnReverseOrder = document.getElementById('btn-reverse-order');
 
-    // Setup: Digital Ballot Paper Entry
+    // Setup: Ballot Entry
     this.inputBallotSerial = document.getElementById('input-ballot-serial');
-    this.btnSerialLabel = document.getElementById('btn-serial-label');
-    this.ballotCandidateInputs = document.getElementById('ballot-candidate-inputs');
-    this.btnClearBallotForm = document.getElementById('btn-clear-ballot-form');
+    this.inputBallotCount = document.getElementById('input-ballot-count');
     this.btnRecordBallot = document.getElementById('btn-record-ballot');
-    this.ballotValidationWarning = document.getElementById('ballot-validation-warning');
-    this.ballotValidationWarningText = document.getElementById('ballot-validation-warning-text');
-
-    // Setup: Serialized Registry Table & Search
-    this.searchBallotInput = document.getElementById('search-ballot-input');
-    this.btnClearSearch = document.getElementById('btn-clear-search');
+    this.ballotCandidateInputs = document.getElementById('ballot-candidate-inputs');
+    this.duplicateRankAlert = document.getElementById('duplicate-rank-alert');
+    this.duplicateRankNumber = document.getElementById('duplicate-rank-number');
     this.ballotTableBody = document.getElementById('ballot-table-body');
     this.ballotBoxTotalPill = document.getElementById('ballot-box-total-pill');
-    this.btnToggleRawEditor = document.getElementById('btn-toggle-raw-editor');
+
+    // Setup: Raw editor
+    this.btnToggleRaw = document.getElementById('btn-toggle-raw');
     this.rawEditorContainer = document.getElementById('raw-editor-container');
     this.textareaBallots = document.getElementById('textarea-ballots');
     this.btnApplyRaw = document.getElementById('btn-apply-raw');
     this.btnExportJson = document.getElementById('btn-export-json');
 
-    // Edit Candidate Modal
-    this.modalEditCandidate = document.getElementById('modal-edit-candidate');
-    this.editCandidateId = document.getElementById('edit-candidate-id');
-    this.editCandidateName = document.getElementById('edit-candidate-name');
-    this.editCandidateDept = document.getElementById('edit-candidate-dept');
-    this.btnCloseEditModal = document.getElementById('btn-close-edit-modal');
-    this.btnCancelEditCandidate = document.getElementById('btn-cancel-edit-candidate');
-    this.btnSaveEditCandidate = document.getElementById('btn-save-edit-candidate');
-
-    // Audit Ballot Slip Modal
-    this.modalAuditBallot = document.getElementById('modal-audit-ballot');
-    this.ballotAuditSlipContent = document.getElementById('ballot-audit-slip-content');
-    this.btnCloseAuditModal = document.getElementById('btn-close-audit-modal');
-
-    // Main Actions & Theme
-    this.btnRunCustom = document.getElementById('btn-run-custom-election');
+    // Action buttons
     this.btnClearAllBallots = document.getElementById('btn-clear-all-ballots');
     this.btnLoadSample = document.getElementById('btn-load-sample');
-    this.btnToggleTheme = document.getElementById('btn-toggle-theme');
-    this.themeIcon = document.getElementById('theme-icon');
+    this.btnRunCustom = document.getElementById('btn-run-custom-election');
+
     this.appToast = document.getElementById('app-toast');
   }
 
   bindEvents() {
     // Navigation Tabs
     this.tabBtnSim.addEventListener('click', () => this.switchTab('sim'));
-    this.tabBtnBallots.addEventListener('click', () => this.switchTab('ballots'));
+    this.tabBtnNominal.addEventListener('click', () => this.switchTab('nominal'));
+    this.tabBtnNomination.addEventListener('click', () => this.switchTab('nomination'));
     this.tabBtnPrimer.addEventListener('click', () => this.switchTab('primer'));
+    this.tabBtnBallots.addEventListener('click', () => this.switchTab('ballots'));
 
-    document.getElementById('link-footer-sim')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.switchTab('sim');
-    });
-    document.getElementById('link-footer-ballots')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.switchTab('ballots');
-    });
-    document.getElementById('link-footer-primer')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      this.switchTab('primer');
+    // Auth Toggle / Gate
+    this.btnAuthToggle.addEventListener('click', () => this.handleAuthToggle());
+    this.btnGateUnlock.addEventListener('click', () => this.handleGateUnlock());
+    this.gatePasscodeInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.handleGateUnlock();
     });
 
-    // Preset selector
-    this.selectPreset.addEventListener('change', (e) => {
-      const val = e.target.value;
-      if (val === 'custom') {
-        this.switchTab('ballots');
-      } else {
-        this.loadPreset(val);
-      }
+    // Login Modal
+    this.btnSubmitLogin.addEventListener('click', () => this.handleModalLogin());
+    this.btnCancelLogin.addEventListener('click', () => this.closeModal(this.modalAdminLogin));
+    this.btnCloseLoginModal.addEventListener('click', () => this.closeModal(this.modalAdminLogin));
+    this.loginPasscode.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') this.handleModalLogin();
     });
 
-    // Stepper Controls
+    // Change Password Modal
+    this.btnChangePwd?.addEventListener('click', () => this.openModal(this.modalChangePwd));
+    this.btnClosePwdModal?.addEventListener('click', () => this.closeModal(this.modalChangePwd));
+    this.btnCancelPwd?.addEventListener('click', () => this.closeModal(this.modalChangePwd));
+    this.btnSavePwd?.addEventListener('click', () => this.handleSaveNewPassword());
+
+    // Theme Toggle
+    document.getElementById('btn-toggle-theme')?.addEventListener('click', () => this.toggleTheme());
+
+    // Preset Selection
+    this.selectPreset.addEventListener('change', (e) => this.loadPreset(e.target.value));
+
+    // Simulation Controls
+    this.btnFirst.addEventListener('click', () => this.jumpToRound(0));
     this.btnPrev.addEventListener('click', () => this.stepRound(-1));
     this.btnNext.addEventListener('click', () => this.stepRound(1));
-    this.btnFirst.addEventListener('click', () => this.jumpToRound(0));
-    this.btnLast.addEventListener('click', () => this.jumpToRound(this.electionResult.rounds.length - 1));
-    this.btnReset.addEventListener('click', () => this.jumpToRound(0));
-
-    // Auto Play / Pause
+    this.btnLast.addEventListener('click', () => this.jumpToRound(999));
+    this.btnPrevSubstep.addEventListener('click', () => this.stepSubstep(-1));
+    this.btnNextSubstep.addEventListener('click', () => this.stepSubstep(1));
     this.btnPlayPause.addEventListener('click', () => this.togglePlay());
+    this.btnReset.addEventListener('click', () => this.resetSimulation());
 
-    // Speed Slider
     this.speedSlider.addEventListener('input', (e) => {
-      this.speedMs = Number(e.target.value);
+      this.speedMs = parseInt(e.target.value, 10);
       this.speedVal.textContent = `${(this.speedMs / 1000).toFixed(1)}s`;
       if (this.isPlaying) {
         this.pause();
@@ -253,199 +336,557 @@ class STVApp {
       }
     });
 
-    // Vacancy Stepper
+    // Voice Announcer
+    this.btnToggleVoice.addEventListener('click', () => this.toggleVoiceAnnouncer());
+
+    // Certificates
+    this.btnOpenCertificate.addEventListener('click', () => this.openResultsCertificate());
+    this.btnPrintElectionCertificate.addEventListener('click', () => window.print());
+    this.btnCloseCertModal.addEventListener('click', () => this.closeModal(this.modalElectionCertificate));
+
+    // Nomination Print
+    this.btnPrintNomSlip.addEventListener('click', () => window.print());
+    this.btnCloseNomModal.addEventListener('click', () => this.closeModal(this.modalNominationSlip));
+
+    // Setup: Vacancy
     this.btnSeatMinus.addEventListener('click', () => this.adjustSeats(-1));
     this.btnSeatPlus.addEventListener('click', () => this.adjustSeats(1));
     this.inputQuotaType.addEventListener('change', (e) => {
       this.quotaType = e.target.value;
+      this.selectPreset.value = 'custom';
     });
 
-    // Candidate Add
-    this.btnAddCandidate.addEventListener('click', () => this.addCandidateFromInputs());
+    // Setup: Candidates
+    this.btnAddCandidate.addEventListener('click', () => this.addCandidateFromForm());
     this.inputNewCandName.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.addCandidateFromInputs();
-    });
-    this.inputNewCandDept.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') this.addCandidateFromInputs();
+      if (e.key === 'Enter') this.addCandidateFromForm();
     });
 
-    // Candidate Sequence Sorting Controls
-    this.btnSortAz?.addEventListener('click', () => this.sortCandidatesAlphabetical());
-    this.btnSortDept?.addEventListener('click', () => this.sortCandidatesByDepartment());
-    this.btnReverseOrder?.addEventListener('click', () => this.reverseCandidateOrder());
-
-    // Candidate Edit Modal Actions
-    this.btnCloseEditModal.addEventListener('click', () => this.closeEditCandidateModal());
-    this.btnCancelEditCandidate.addEventListener('click', () => this.closeEditCandidateModal());
-    this.btnSaveEditCandidate.addEventListener('click', () => this.saveCandidateEdits());
-
-    // Digital Ballot Paper Actions
-    this.btnClearBallotForm.addEventListener('click', () => this.clearBallotPaperForm());
+    // Setup: Ballot Entry
     this.btnRecordBallot.addEventListener('click', () => this.recordBallotFromPaper());
-    this.inputBallotSerial.addEventListener('input', () => this.updateSerialButtonLabel());
+    this.btnClearAllBallots.addEventListener('click', () => this.clearAllBallots());
+    this.btnLoadSample.addEventListener('click', () => this.loadPreset('faculty_senate'));
+    this.btnRunCustom.addEventListener('click', () => this.calculateAndTally(true));
 
-    // Ballot Search & Registry Filter
-    this.searchBallotInput.addEventListener('input', () => this.renderBallotTable());
-    this.btnClearSearch.addEventListener('click', () => {
-      this.searchBallotInput.value = '';
-      this.renderBallotTable();
-    });
-
-    // Audit Slip Modal Close
-    this.btnCloseAuditModal.addEventListener('click', () => this.closeAuditModal());
-    this.modalAuditBallot.addEventListener('click', (e) => {
-      if (e.target === this.modalAuditBallot) this.closeAuditModal();
-    });
-
-    // Raw text editor toggle
-    this.btnToggleRawEditor.addEventListener('click', () => {
+    // Setup: Raw
+    this.btnToggleRaw.addEventListener('click', () => {
       const isHidden = this.rawEditorContainer.style.display === 'none';
       this.rawEditorContainer.style.display = isHidden ? 'block' : 'none';
-      this.btnToggleRawEditor.textContent = isHidden ? 'Hide Raw Export & Import' : 'Show / Hide Raw Export & Import';
     });
-    this.btnApplyRaw.addEventListener('click', () => this.parseRawTextarea());
-    this.btnExportJson.addEventListener('click', () => this.exportJson());
+    this.btnApplyRaw.addEventListener('click', () => this.applyRawText());
+    this.btnExportJson.addEventListener('click', () => this.exportJsonRegistry());
 
-    // Run, Clear, & Load Sample Actions
-    this.btnRunCustom.addEventListener('click', () => this.runTallyFromCurrentSetup());
-    this.btnClearAllBallots?.addEventListener('click', () => this.clearAllBallots());
-    this.btnLoadSample?.addEventListener('click', () => this.loadSampleData());
+    // Edit Candidate Modal
+    this.btnSaveEditCandidate.addEventListener('click', () => this.saveCandidateEdit());
+    this.btnCancelEditCandidate.addEventListener('click', () => this.closeModal(this.modalEditCandidate));
+    this.btnCloseEditModal.addEventListener('click', () => this.closeModal(this.modalEditCandidate));
 
-    // Theme Toggle
-    this.btnToggleTheme.addEventListener('click', () => this.toggleTheme());
+    // Ballot Audit Slip Modal
+    this.btnCloseAuditModal.addEventListener('click', () => this.closeModal(this.modalAuditBallot));
+
+    // Nominal Rolls
+    this.inputNominalSearch.addEventListener('input', () => this.renderNominalRollTable());
+    this.selectNominalDept.addEventListener('change', () => this.renderNominalRollTable());
+    this.btnExportNominalCsv.addEventListener('click', () => this.exportNominalCsv());
+    this.btnOpenImportCsv?.addEventListener('click', () => this.openModal(this.modalImportCsv));
+    this.btnCloseCsvModal?.addEventListener('click', () => this.closeModal(this.modalImportCsv));
+    this.btnCancelCsv?.addEventListener('click', () => this.closeModal(this.modalImportCsv));
+    this.btnSubmitCsvImport?.addEventListener('click', () => this.handleCsvImport());
+
+    // Nomination Form
+    this.formNomination.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.handleNominationSubmit();
+    });
   }
 
-  switchTab(tab) {
-    this.tabBtnSim.classList.toggle('active', tab === 'sim');
-    this.tabBtnBallots.classList.toggle('active', tab === 'ballots');
-    this.tabBtnPrimer.classList.toggle('active', tab === 'primer');
+  // =========================================================================
+  // AUTHENTICATION & ROLE MANAGEMENT
+  // =========================================================================
 
-    this.viewSim.style.display = tab === 'sim' ? 'block' : 'none';
-    this.viewBallots.style.display = tab === 'ballots' ? 'block' : 'none';
-    this.viewPrimer.style.display = tab === 'primer' ? 'block' : 'none';
+  updateAuthUi() {
+    const isAuth = this.authService.isAuthenticated();
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (isAuth) {
+      this.roleBadge.className = 'role-badge admin';
+      this.roleBadgeText.textContent = 'Returning Officer';
+      this.authBtnIcon.textContent = '🔓';
+      this.authBtnLabel.textContent = 'Sign Out';
+      this.tabLockIcon.textContent = '🛡️';
+
+      this.adminLockoutGate.style.display = 'none';
+      this.adminAuthenticatedContent.style.display = 'block';
+
+      // Show admin actions in nominal rolls
+      document.querySelectorAll('.admin-only-btn').forEach(el => el.style.display = 'inline-flex');
+      document.querySelectorAll('.admin-only-col').forEach(el => el.style.display = 'table-cell');
+    } else {
+      this.roleBadge.className = 'role-badge public';
+      this.roleBadgeText.textContent = 'Public Observer';
+      this.authBtnIcon.textContent = '🔒';
+      this.authBtnLabel.textContent = 'Officer Login';
+      this.tabLockIcon.textContent = '🔒';
+
+      this.adminLockoutGate.style.display = 'block';
+      this.adminAuthenticatedContent.style.display = 'none';
+
+      document.querySelectorAll('.admin-only-btn').forEach(el => el.style.display = 'none');
+      document.querySelectorAll('.admin-only-col').forEach(el => el.style.display = 'none');
+    }
+
+    this.renderNominalRollTable();
   }
+
+  handleAuthToggle() {
+    if (this.authService.isAuthenticated()) {
+      this.authService.logout();
+      this.updateAuthUi();
+      this.showToast("Signed out of Returning Officer mode. Switched to Public Observer view.", "info");
+      if (this.activeTab === 'ballots') {
+        this.switchTab('sim');
+      }
+    } else {
+      this.loginPasscode.value = '';
+      this.openModal(this.modalAdminLogin);
+      setTimeout(() => this.loginPasscode.focus(), 150);
+    }
+  }
+
+  handleModalLogin() {
+    const pwd = this.loginPasscode.value;
+    if (this.authService.login(pwd)) {
+      this.closeModal(this.modalAdminLogin);
+      this.updateAuthUi();
+      this.showToast("🔓 Returning Officer authenticated. Admin controls unlocked.", "success");
+      this.switchTab('ballots');
+    } else {
+      this.showToast("Invalid officer passcode. Please try again.", "warning");
+      this.loginPasscode.select();
+    }
+  }
+
+  handleGateUnlock() {
+    const pwd = this.gatePasscodeInput.value;
+    if (this.authService.login(pwd)) {
+      this.gatePasscodeInput.value = '';
+      this.updateAuthUi();
+      this.showToast("🔓 Returning Officer authenticated. Admin setup unlocked.", "success");
+    } else {
+      this.showToast("Invalid officer passcode.", "warning");
+      this.gatePasscodeInput.select();
+    }
+  }
+
+  handleSaveNewPassword() {
+    const current = this.pwdCurrent.value;
+    const next = this.pwdNew.value;
+    try {
+      this.authService.changePasscode(current, next);
+      this.closeModal(this.modalChangePwd);
+      this.pwdCurrent.value = '';
+      this.pwdNew.value = '';
+      this.showToast("✓ Officer passcode updated successfully.", "success");
+    } catch (err) {
+      this.showToast(err.message, "warning");
+    }
+  }
+
+  // =========================================================================
+  // NAVIGATION & TAB SWITCHING
+  // =========================================================================
+
+  switchTab(tabKey) {
+    this.activeTab = tabKey;
+    const tabs = [
+      { key: 'sim', btn: this.tabBtnSim, view: this.viewSim },
+      { key: 'nominal', btn: this.tabBtnNominal, view: this.viewNominal },
+      { key: 'nomination', btn: this.tabBtnNomination, view: this.viewNomination },
+      { key: 'primer', btn: this.tabBtnPrimer, view: this.viewPrimer },
+      { key: 'ballots', btn: this.tabBtnBallots, view: this.viewBallots },
+    ];
+
+    tabs.forEach(t => {
+      const active = t.key === tabKey;
+      t.btn.classList.toggle('active', active);
+      t.btn.setAttribute('aria-selected', active);
+      t.view.style.display = active ? 'block' : 'none';
+    });
+
+    if (tabKey === 'nominal') {
+      this.renderNominalRollTable();
+    } else if (tabKey === 'nomination') {
+      this.renderNominationsList();
+    }
+  }
+
+  toggleTheme() {
+    const html = document.documentElement;
+    const current = html.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-theme', next);
+    const icon = document.getElementById('theme-icon');
+    if (icon) icon.textContent = next === 'dark' ? '🌙' : '☀️';
+  }
+
+  openModal(modal) {
+    if (!modal) return;
+    modal.classList.add('visible');
+  }
+
+  closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('visible');
+  }
+
+  // =========================================================================
+  // VOICE ANNOUNCER (SPEECH SYNTHESIS)
+  // =========================================================================
+
+  toggleVoiceAnnouncer() {
+    this.voiceEnabled = !this.voiceEnabled;
+    this.btnToggleVoice.classList.toggle('btn-voice-active', this.voiceEnabled);
+    this.voiceLabel.textContent = this.voiceEnabled ? 'Voice: ON' : 'Voice: OFF';
+    this.voiceIcon.textContent = this.voiceEnabled ? '📢' : '🎙️';
+
+    if (this.voiceEnabled) {
+      this.speak("Live Voice Announcer activated. Announcements will be read aloud.");
+      this.showToast("📢 Voice Announcer active. Sub-step commentary will be spoken aloud.", "success");
+    } else {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      this.showToast("Voice Announcer muted.", "info");
+    }
+  }
+
+  speak(text) {
+    if (!this.voiceEnabled || !window.speechSynthesis || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn("Speech synthesis error", e);
+    }
+  }
+
+  // =========================================================================
+  // NOMINAL ROLLS MODULE
+  // =========================================================================
+
+  initNominalRollUi() {
+    // Populate departments filter
+    const depts = this.nominalService.getDepartments();
+    this.selectNominalDept.innerHTML = '<option value="">All Departments</option>';
+    depts.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d;
+      opt.textContent = d;
+      this.selectNominalDept.appendChild(opt);
+    });
+    this.renderNominalRollTable();
+  }
+
+  renderNominalRollTable() {
+    const q = this.inputNominalSearch.value;
+    const dept = this.selectNominalDept.value;
+    const list = this.nominalService.filter(q, dept);
+    const isAuth = this.authService.isAuthenticated();
+
+    this.nominalCountSummary.textContent = `Showing ${list.length} of ${this.nominalService.getAll().length} registered voters`;
+    this.nominalTableBody.innerHTML = '';
+
+    if (list.length === 0) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td colspan="${isAuth ? 7 : 6}" style="text-align: center; padding: 2rem; color: var(--text-muted);">No matching voters found in nominal roll.</td>`;
+      this.nominalTableBody.appendChild(tr);
+      return;
+    }
+
+    list.forEach(voter => {
+      const tr = document.createElement('tr');
+      const isIssued = voter.status === 'Ballot Issued';
+      const badgeClass = isIssued ? 'status-badge-issued' : 'status-badge-eligible';
+
+      tr.innerHTML = `
+        <td><code style="font-weight: 700;">${voter.id}</code></td>
+        <td><code>${voter.rollNo}</code></td>
+        <td><strong>${voter.name}</strong></td>
+        <td>${voter.dept}</td>
+        <td>${voter.year}</td>
+        <td><span class="${badgeClass}">${voter.status}</span></td>
+        ${isAuth ? `
+          <td class="admin-only-col">
+            <button type="button" class="btn btn-ghost btn-sm btn-toggle-voter-status" data-id="${voter.id}" style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">
+              ${isIssued ? 'Mark Eligible' : 'Mark Issued'}
+            </button>
+          </td>
+        ` : ''}
+      `;
+
+      if (isAuth) {
+        tr.querySelector('.btn-toggle-voter-status')?.addEventListener('click', () => {
+          this.nominalService.toggleVoterStatus(voter.id);
+          this.renderNominalRollTable();
+        });
+      }
+
+      this.nominalTableBody.appendChild(tr);
+    });
+  }
+
+  exportNominalCsv() {
+    const csv = this.nominalService.toCSV();
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `nominal_roll_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showToast("✓ Nominal roll CSV exported.", "info");
+  }
+
+  handleCsvImport() {
+    const text = this.csvImportTextarea.value;
+    try {
+      const count = this.nominalService.importCSV(text);
+      this.closeModal(this.modalImportCsv);
+      this.csvImportTextarea.value = '';
+      this.initNominalRollUi();
+      this.showToast(`✓ Successfully imported ${count} voter records into nominal roll.`, "success");
+    } catch (err) {
+      this.showToast(err.message, "warning");
+    }
+  }
+
+  // =========================================================================
+  // CANDIDATE NOMINATIONS MODULE
+  // =========================================================================
+
+  initNominationUi() {
+    this.renderNominationsList();
+  }
+
+  handleNominationSubmit() {
+    const data = {
+      post: document.getElementById('nom-post').value,
+      candidateName: document.getElementById('nom-cand-name').value,
+      candidateRoll: document.getElementById('nom-cand-roll').value,
+      candidateDept: document.getElementById('nom-cand-dept').value,
+      candidateClass: document.getElementById('nom-cand-class').value,
+      proposerName: document.getElementById('nom-prop-name').value,
+      proposerRoll: document.getElementById('nom-prop-roll').value,
+      proposerDept: document.getElementById('nom-cand-dept').value,
+      seconderName: document.getElementById('nom-sec-name').value,
+      seconderRoll: document.getElementById('nom-sec-roll').value,
+      seconderDept: document.getElementById('nom-cand-dept').value,
+    };
+
+    const newNom = this.nominationService.submitNomination(data);
+    this.formNomination.reset();
+    this.renderNominationsList();
+
+    // Render slip in modal and pop up
+    this.nominationSlipRenderTarget.innerHTML = this.nominationService.generatePrintableSlipHtml(newNom);
+    this.openModal(this.modalNominationSlip);
+    this.showToast(`✓ Nomination paper submitted! Registered as ${newNom.id}.`, "success");
+  }
+
+  renderNominationsList() {
+    const list = this.nominationService.getAll();
+    this.nominationsListContainer.innerHTML = '';
+
+    if (list.length === 0) {
+      this.nominationsListContainer.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem;">No nominations filed yet.</div>';
+      return;
+    }
+
+    list.forEach(nom => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background: var(--bg-surface-elevated); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 0.85rem;';
+      card.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+          <div>
+            <strong style="font-size: 0.95rem; color: var(--text-primary);">${nom.candidateName}</strong>
+            <div style="font-size: 0.785rem; color: var(--text-muted);">${nom.candidateDept} &bull; Roll: <code>${nom.candidateRoll}</code></div>
+          </div>
+          <span class="status-tag hopeful" style="font-size: 0.7rem;">${nom.status}</span>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+          Post: <strong>${nom.post}</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-subtle); padding-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
+          <span>Ref: <code>${nom.id}</code></span>
+          <button type="button" class="btn btn-secondary btn-sm btn-view-slip" style="padding: 0.2rem 0.6rem; font-size: 0.75rem;">View Slip</button>
+        </div>
+      `;
+
+      card.querySelector('.btn-view-slip').addEventListener('click', () => {
+        this.nominationSlipRenderTarget.innerHTML = this.nominationService.generatePrintableSlipHtml(nom);
+        this.openModal(this.modalNominationSlip);
+      });
+
+      this.nominationsListContainer.appendChild(card);
+    });
+  }
+
+  // =========================================================================
+  // OFFICIAL DECLARATION OF RESULTS CERTIFICATE
+  // =========================================================================
+
+  openResultsCertificate() {
+    if (!this.electionResult) {
+      this.showToast("Calculate and run an election count first to generate the certificate.", "warning");
+      return;
+    }
+
+    const quota = this.electionResult.quota;
+    const totalVotes = this.electionResult.totalValidVotes;
+    const elected = this.electionResult.electedCandidates;
+    const finalRound = this.electionResult.rounds[this.electionResult.rounds.length - 1];
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+    let winnerRows = '';
+    elected.forEach((candName, idx) => {
+      const candObj = this.candidates.find(c => c.name === candName) || { dept: "General" };
+      const finalVotes = (finalRound.tallies[candName] || quota).toFixed(4);
+      winnerRows += `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;"><strong>#${idx + 1}</strong></td>
+          <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>${candName}</strong></td>
+          <td style="padding: 8px; border: 1px solid #cbd5e1;">${candObj.dept}</td>
+          <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; font-family: monospace;">${finalVotes}</td>
+          <td style="padding: 8px; border: 1px solid #cbd5e1; text-align: center;"><span style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; font-weight: bold;">ELECTED</span></td>
+        </tr>
+      `;
+    });
+
+    const certHtml = `
+      <div class="nomination-slip-document" style="border: 2px solid #0f172a; padding: 2rem;">
+        <div class="nom-slip-header">
+          <div class="nom-slip-emblem">🏛️</div>
+          <div class="nom-slip-heading">OFFICIAL RETURN OF PREFERENTIAL ELECTION</div>
+          <div class="nom-slip-subheading">STATUTORY CERTIFICATE OF DECLARED RESULTS & SCRUTINY AUDIT</div>
+          <div class="nom-slip-badge">Inclusive Gregory Method &bull; Single Transferable Vote (STV)</div>
+        </div>
+
+        <div class="nom-meta-row">
+          <div><strong>Election Name:</strong> ${PRESETS[this.currentPresetKey]?.name || "Institutional Preferential Election"}</div>
+          <div><strong>Date & Timestamp:</strong> ${dateStr}</div>
+          <div><strong>Total Verified Ballots:</strong> ${this.compiledBallots.length}</div>
+          <div><strong>Winning Quota:</strong> ${quota.toFixed(4)} (${this.quotaType.toUpperCase()})</div>
+        </div>
+
+        <div class="nom-section-title">1. OFFICIAL RETURN OF DECLARED WINNERS</div>
+        <table style="width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem;">
+          <thead>
+            <tr style="background: #f1f5f9;">
+              <th style="padding: 8px; border: 1px solid #cbd5e1; width: 60px;">Rank</th>
+              <th style="padding: 8px; border: 1px solid #cbd5e1;">Candidate Full Name</th>
+              <th style="padding: 8px; border: 1px solid #cbd5e1;">Department</th>
+              <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right; width: 110px;">Final Votes</th>
+              <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: center; width: 100px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${winnerRows}
+          </tbody>
+        </table>
+
+        <div class="nom-section-title" style="margin-top: 1.5rem;">2. ELECTION TALLY SUMMARY</div>
+        <div class="nom-grid-2" style="font-size: 0.85rem;">
+          <div class="nom-box">
+            <div><strong>Total Valid Vote Weight:</strong> ${totalVotes.toFixed(4)}</div>
+            <div><strong>Total Count Rounds Executed:</strong> ${this.electionResult.rounds.length}</div>
+          </div>
+          <div class="nom-box">
+            <div><strong>Exhausted / Non-Transferable Votes:</strong> ${this.electionResult.exhaustedTotal.toFixed(4)}</div>
+            <div><strong>Seats Vacant:</strong> 0 (${this.seats} of ${this.seats} Filled)</div>
+          </div>
+        </div>
+
+        <div class="nom-section-title" style="margin-top: 1.5rem;">3. RETURNING OFFICER STATUTORY DECLARATION</div>
+        <div class="nom-declaration-box" style="font-size: 0.85rem;">
+          I, the undersigned Returning Officer, do hereby certify that the count of the votes cast in the above election was completed in strict accordance with statutory Single Transferable Vote regulations using the Inclusive Gregory fractional transfer method, and I hereby declare the candidates listed in Section 1 to be duly elected.
+        </div>
+
+        <div class="nom-slip-footer">
+          <div class="officer-seal-box">
+            <div class="seal-circle">OFFICIAL SEAL<br>RETURNING OFFICER</div>
+            <div class="seal-caption">Returning Officer Signature & Seal</div>
+          </div>
+          <div style="font-size: 0.75rem; color: #475569; text-align: right;">
+            <div>Digitally Audited & Sealed by Electoral Board</div>
+            <div>Verification Code: <code>STV-${Math.random().toString(16).substring(2, 10).toUpperCase()}</code></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    this.certificateRenderTarget.innerHTML = certHtml;
+    this.openModal(this.modalElectionCertificate);
+  }
+
+  // =========================================================================
+  // PRESET & SETUP LOGIC
+  // =========================================================================
 
   loadPreset(presetKey) {
-    let preset = PRESETS[presetKey];
-    if (!preset) {
-      presetKey = 'faculty_senate';
-      preset = PRESETS[presetKey];
-    }
+    const preset = PRESETS[presetKey];
+    if (!preset) return;
+
     this.currentPresetKey = presetKey;
     this.selectPreset.value = presetKey;
-
     this.seats = preset.seats;
-    this.quotaType = preset.quotaType;
-    this.candidates = preset.candidates.map(c => ({ ...c }));
-
-    let sIdx = 1;
-    this.ballotEntries = [];
-    preset.ballotEntries.forEach(be => {
-      for (let i = 0; i < be.count; i++) {
-        const serial = `BAL-${String(sIdx).padStart(4, '0')}`;
-        this.ballotEntries.push({
-          serial,
-          count: 1,
-          prefs: [...be.prefs],
-          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        sIdx++;
-      }
-    });
-
+    this.quotaType = preset.quotaType || 'droop';
     this.inputSeats.value = this.seats;
     this.inputQuotaType.value = this.quotaType;
-    this.serialCounter = sIdx;
+
+    this.candidates = preset.candidates.map(c => ({ ...c }));
+    this.ballotEntries = preset.ballotEntries.map(b => ({
+      serial: b.serial,
+      count: b.count,
+      prefs: [...b.prefs]
+    }));
+
+    this.serialCounter = 101;
     this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
-    this.updateSerialButtonLabel();
 
     this.renderCandidateRoster();
     this.renderBallotPaperRows();
     this.renderBallotTable();
     this.syncRawTextarea();
-    this.runTallyFromCurrentSetup(false);
-  }
 
-  updateSerialButtonLabel() {
-    if (this.btnSerialLabel) {
-      this.btnSerialLabel.textContent = this.inputBallotSerial.value.trim() || `BAL-${String(this.serialCounter).padStart(4, '0')}`;
-    }
+    this.calculateAndTally(false);
   }
 
   adjustSeats(delta) {
-    const nextVal = this.seats + delta;
-    if (nextVal >= 1 && nextVal < this.candidates.length) {
-      this.seats = nextVal;
+    const next = this.seats + delta;
+    if (next >= 1 && next < this.candidates.length) {
+      this.seats = next;
       this.inputSeats.value = this.seats;
       this.selectPreset.value = 'custom';
     }
   }
 
-  showToast(message, type = 'success') {
-    const toast = this.appToast || document.getElementById('app-toast');
-    if (!toast) return;
-    toast.textContent = message;
-    toast.className = `app-toast visible ${type}`;
-    clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => {
-      toast.classList.remove('visible');
-    }, 2800);
-  }
-
-  clearAllBallots() {
-    if (this.ballotEntries.length === 0) {
-      this.showToast("Ballot box is already empty.", "info");
-      return;
-    }
-    this.ballotEntries = [];
-    this.compiledBallots = [];
-    this.serialCounter = 1;
-    this.inputBallotSerial.value = "BAL-0001";
-    this.updateSerialButtonLabel();
-    this.clearBallotPaperForm();
-    this.selectPreset.value = 'custom';
-    this.renderBallotTable();
-    this.syncRawTextarea();
-
-    // Reset KPI displays
-    this.kpiTotalVotes.textContent = "0.00";
-    this.kpiTotalBallots.textContent = "0 verified ballots cast";
-    this.kpiSeatsStatus.textContent = `0 / ${this.seats} Filled`;
-
-    this.showToast("🗑️ All ballots cleared (0 ballots). Ready for new manual entry.", "info");
-
-    const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-    if (firstInput) firstInput.focus();
-  }
-
-  // =========================================================================
-  // CANDIDATE MANAGEMENT (NAME & DEPARTMENT WITH EDITING)
-  // =========================================================================
-
-  addCandidateFromInputs() {
+  addCandidateFromForm() {
     const name = this.inputNewCandName.value.trim();
-    const dept = this.inputNewCandDept.value.trim();
+    const dept = this.inputNewCandDept.value.trim() || 'General';
 
     if (!name) {
-      this.inputNewCandName.focus();
+      this.showToast("Candidate name cannot be empty.", "warning");
       return;
     }
-
     if (this.candidates.some(c => c.name.toLowerCase() === name.toLowerCase())) {
-      alert(`Candidate '${name}' is already registered in this election.`);
+      this.showToast("A candidate with this name already exists.", "warning");
       return;
     }
 
-    const nextColor = SLATE_COLORS[this.candidates.length % SLATE_COLORS.length];
-    const newId = `c-${Date.now()}`;
-    this.candidates.push({
-      id: newId,
-      name,
-      dept: dept || "General Faculty",
-      color: nextColor
-    });
+    const id = `cand_${Date.now()}`;
+    const color = SLATE_COLORS[this.candidates.length % SLATE_COLORS.length];
+    this.candidates.push({ id, name, dept, color });
 
     this.inputNewCandName.value = '';
     this.inputNewCandDept.value = '';
@@ -453,226 +894,108 @@ class STVApp {
 
     this.renderCandidateRoster();
     this.renderBallotPaperRows();
-    this.inputNewCandName.focus();
-  }
-
-  openEditCandidateModal(candId) {
-    const cand = this.candidates.find(c => c.id === candId);
-    if (!cand) return;
-
-    this.editCandidateId.value = cand.id;
-    this.editCandidateName.value = cand.name;
-    this.editCandidateDept.value = cand.dept;
-    this.modalEditCandidate.classList.add('open');
-    this.editCandidateName.focus();
-  }
-
-  closeEditCandidateModal() {
-    this.modalEditCandidate.classList.remove('open');
-  }
-
-  saveCandidateEdits() {
-    const candId = this.editCandidateId.value;
-    const newName = this.editCandidateName.value.trim();
-    const newDept = this.editCandidateDept.value.trim();
-
-    if (!newName) {
-      alert("Candidate name cannot be blank.");
-      return;
-    }
-
-    const cand = this.candidates.find(c => c.id === candId);
-    if (!cand) return;
-
-    const oldName = cand.name;
-    cand.name = newName;
-    cand.dept = newDept || "General Faculty";
-
-    // Update references in all active ballot entries
-    if (oldName !== newName) {
-      this.ballotEntries.forEach(entry => {
-        entry.prefs = entry.prefs.map(p => p === oldName ? newName : p);
-      });
-    }
-
-    this.closeEditCandidateModal();
-    this.selectPreset.value = 'custom';
-
-    this.renderCandidateRoster();
-    this.renderBallotPaperRows();
-    this.renderBallotTable();
-    this.syncRawTextarea();
+    this.showToast(`Candidate '${name}' added to roster.`, "info");
   }
 
   removeCandidate(candId) {
     if (this.candidates.length <= 2) {
-      alert("At least 2 candidates are required for preferential STV election.");
+      this.showToast("An election requires at least 2 candidates.", "warning");
       return;
     }
+    const idx = this.candidates.findIndex(c => c.id === candId);
+    if (idx === -1) return;
+    const removedName = this.candidates[idx].name;
+    this.candidates.splice(idx, 1);
 
-    const cand = this.candidates.find(c => c.id === candId);
-    if (!cand) return;
-
-    const removedName = cand.name;
-    this.candidates = this.candidates.filter(c => c.id !== candId);
-
-    // If vacancies exceeds candidates count, adjust vacancies
     if (this.seats >= this.candidates.length) {
       this.seats = Math.max(1, this.candidates.length - 1);
       this.inputSeats.value = this.seats;
     }
 
-    // Remove candidate from all registered ballots
-    this.ballotEntries = this.ballotEntries.map(entry => ({
-      ...entry,
-      prefs: entry.prefs.filter(p => p !== removedName)
-    })).filter(entry => entry.prefs.length > 0);
+    // Clean preferences from existing ballot entries
+    this.ballotEntries.forEach(b => {
+      b.prefs = b.prefs.filter(p => p !== removedName);
+    });
 
-    this.selectPreset.value = 'custom';
     this.renderCandidateRoster();
     this.renderBallotPaperRows();
     this.renderBallotTable();
     this.syncRawTextarea();
-  }
-
-  moveCandidate(index, direction) {
-    const targetIndex = index + direction;
-    if (targetIndex < 0 || targetIndex >= this.candidates.length) return;
-
-    const cand = this.candidates[index];
-    const [moved] = this.candidates.splice(index, 1);
-    this.candidates.splice(targetIndex, 0, moved);
-
-    this.selectPreset.value = 'custom';
-    this.renderCandidateRoster();
-    this.renderBallotPaperRows();
-    this.showToast(`↕️ Moved "${cand.name}" to ballot line #${targetIndex + 1}.`, 'info');
-
-    // Auto-focus the moved candidate's input for seamless data entry
-    const inputs = this.ballotCandidateInputs.querySelectorAll('.rank-box-input');
-    if (inputs[targetIndex]) {
-      inputs[targetIndex].focus();
-      inputs[targetIndex].select();
-    }
-  }
-
-  sortCandidatesAlphabetical() {
-    this.candidates.sort((a, b) => a.name.localeCompare(b.name));
-    this.selectPreset.value = 'custom';
-    this.renderCandidateRoster();
-    this.renderBallotPaperRows();
-    this.showToast('🔤 Candidates sorted alphabetically (A → Z) on ballot paper.', 'success');
-
-    const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-    firstInput?.focus();
-    firstInput?.select();
-  }
-
-  sortCandidatesByDepartment() {
-    this.candidates.sort((a, b) => a.dept.localeCompare(b.dept) || a.name.localeCompare(b.name));
-    this.selectPreset.value = 'custom';
-    this.renderCandidateRoster();
-    this.renderBallotPaperRows();
-    this.showToast('🏛️ Candidates sorted by Department on ballot paper.', 'success');
-
-    const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-    firstInput?.focus();
-    firstInput?.select();
-  }
-
-  reverseCandidateOrder() {
-    this.candidates.reverse();
-    this.selectPreset.value = 'custom';
-    this.renderCandidateRoster();
-    this.renderBallotPaperRows();
-    this.showToast('🔄 Ballot candidate sequence reversed.', 'info');
-
-    const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-    firstInput?.focus();
-    firstInput?.select();
+    this.showToast(`Candidate '${removedName}' removed.`, "info");
   }
 
   renderCandidateRoster() {
     this.candidateRosterList.innerHTML = '';
-    this.rosterCountLabel.textContent = `${this.candidates.length} Candidates Registered`;
-
     this.candidates.forEach((cand, idx) => {
       const item = document.createElement('div');
-      item.className = 'roster-item';
-      item.setAttribute('role', 'listitem');
-
+      item.className = 'candidate-roster-item';
       item.innerHTML = `
-        <div class="roster-item-meta">
-          <span class="roster-order-badge" title="Ballot Position #${idx + 1}">#${idx + 1}</span>
-          <div class="roster-avatar" style="background: ${cand.color};">
-            ${cand.name.charAt(0)}
-          </div>
-          <div>
-            <span class="roster-name">${cand.name}</span>
-            <span class="roster-dept">${cand.dept}</span>
-          </div>
+        <div class="roster-avatar" style="background: ${cand.color}">
+          ${cand.name.charAt(0)}
+        </div>
+        <div class="roster-info">
+          <div class="roster-name">${cand.name}</div>
+          <div class="roster-dept">${cand.dept}</div>
         </div>
         <div class="roster-actions">
-          <button type="button" class="btn-roster-action reorder move-up" title="Move Up (Slot #${idx})" aria-label="Move ${cand.name} up" ${idx === 0 ? 'disabled' : ''}>
-            ▲
-          </button>
-          <button type="button" class="btn-roster-action reorder move-down" title="Move Down (Slot #${idx + 2})" aria-label="Move ${cand.name} down" ${idx === this.candidates.length - 1 ? 'disabled' : ''}>
-            ▼
-          </button>
-          <button type="button" class="btn-roster-action edit" title="Edit Candidate Details" aria-label="Edit ${cand.name}">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-          </button>
-          <button type="button" class="btn-roster-action delete" title="Remove Candidate" aria-label="Remove ${cand.name}">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+          <button type="button" class="btn-roster-action edit" title="Edit candidate">✏️</button>
+          <button type="button" class="btn-roster-action delete" title="Remove candidate">✕</button>
         </div>
       `;
 
-      item.querySelector('.move-up')?.addEventListener('click', () => this.moveCandidate(idx, -1));
-      item.querySelector('.move-down')?.addEventListener('click', () => this.moveCandidate(idx, 1));
-      item.querySelector('.edit').addEventListener('click', () => this.openEditCandidateModal(cand.id));
+      item.querySelector('.edit').addEventListener('click', () => {
+        this.editCandidateId.value = cand.id;
+        this.editCandidateName.value = cand.name;
+        this.editCandidateDept.value = cand.dept;
+        this.openModal(this.modalEditCandidate);
+      });
+
       item.querySelector('.delete').addEventListener('click', () => this.removeCandidate(cand.id));
 
       this.candidateRosterList.appendChild(item);
     });
   }
 
-  // =========================================================================
-  // DIGITAL PREFERENTIAL BALLOT PAPER ENTRY FORM (NAME 1ST, PREFERENCE RIGHT)
-  // =========================================================================
+  saveCandidateEdit() {
+    const id = this.editCandidateId.value;
+    const cand = this.candidates.find(c => c.id === id);
+    if (!cand) return;
 
-  renderBallotPaperRows() {
-    // Preserve any preference marks currently typed by candidate name
-    const currentPrefs = new Map();
-    if (this.ballotCandidateInputs) {
-      this.ballotCandidateInputs.querySelectorAll('.rank-box-input').forEach(inp => {
-        const cand = inp.dataset.candidate;
-        if (cand && inp.value.trim()) {
-          currentPrefs.set(cand, inp.value.trim());
-        }
+    const oldName = cand.name;
+    const newName = this.editCandidateName.value.trim();
+    const newDept = this.editCandidateDept.value.trim() || 'General';
+
+    if (!newName) {
+      this.showToast("Candidate name cannot be empty.", "warning");
+      return;
+    }
+
+    cand.name = newName;
+    cand.dept = newDept;
+
+    if (oldName !== newName) {
+      this.ballotEntries.forEach(b => {
+        b.prefs = b.prefs.map(p => p === oldName ? newName : p);
       });
     }
 
-    this.ballotCandidateInputs.innerHTML = '';
+    this.closeModal(this.modalEditCandidate);
+    this.renderCandidateRoster();
+    this.renderBallotPaperRows();
+    this.renderBallotTable();
+    this.syncRawTextarea();
+    this.showToast(`Candidate updated to '${newName}'.`, "info");
+  }
 
+  renderBallotPaperRows() {
+    this.ballotCandidateInputs.innerHTML = '';
     this.candidates.forEach((cand, idx) => {
       const row = document.createElement('div');
       row.className = 'ballot-paper-row';
-
-      const existingVal = currentPrefs.get(cand.name) || '';
-      if (existingVal) {
-        row.classList.add('marked');
-      }
-
-      // Slot number + Up/Down quick shift + Name & Dept on LEFT, Preference Input on RIGHT
       row.innerHTML = `
         <div class="ballot-candidate-info">
-          <span class="ballot-cand-order-num" title="Ballot Position #${idx + 1}">${idx + 1}</span>
-          <div class="ballot-paper-reorder-btns" aria-label="Reorder candidate position">
-            <button type="button" class="btn-ballot-shift shift-up" title="Move ${cand.name} up to slot #${idx}" ${idx === 0 ? 'disabled' : ''}>▲</button>
-            <button type="button" class="btn-ballot-shift shift-down" title="Move ${cand.name} down to slot #${idx + 2}" ${idx === this.candidates.length - 1 ? 'disabled' : ''}>▼</button>
-          </div>
-          <div class="roster-avatar" style="background: ${cand.color}; width: 32px; height: 32px; font-size: 0.825rem;">
+          <span class="ballot-cand-order-num">${idx + 1}</span>
+          <div class="roster-avatar" style="background: ${cand.color}; width: 28px; height: 28px; font-size: 0.75rem;">
             ${cand.name.charAt(0)}
           </div>
           <div>
@@ -681,57 +1004,26 @@ class STVApp {
           </div>
         </div>
         <div class="ballot-rank-input-wrap">
-          <input 
-            type="number" 
-            class="rank-box-input" 
-            min="1" 
-            max="${this.candidates.length}" 
-            placeholder="—" 
-            value="${existingVal}"
-            data-candidate="${cand.name}" 
-            tabindex="${idx + 1}" 
-            aria-label="Preference number for ${cand.name} (Ballot position ${idx + 1})"
-          >
+          <input type="number" class="rank-box-input" min="1" max="${this.candidates.length}" placeholder="—" data-candidate="${cand.name}">
         </div>
       `;
 
-      row.querySelector('.shift-up')?.addEventListener('click', () => this.moveCandidate(idx, -1));
-      row.querySelector('.shift-down')?.addEventListener('click', () => this.moveCandidate(idx, 1));
-
       const input = row.querySelector('.rank-box-input');
-
-      // Auto-select value on focus for instant overwrite / speed tabbing
-      input.addEventListener('focus', () => {
-        input.select();
-      });
-
-      // Press Enter to instantly submit and cycle to next ballot
-      input.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          this.recordBallotFromPaper();
-        }
-      });
-
-      // Real-time validation for duplicate preference numbers
       input.addEventListener('input', () => {
         row.classList.toggle('marked', Boolean(input.value.trim()));
-        this.validatePreferencesRealtime();
+        this.validateDuplicateRanks();
       });
 
       this.ballotCandidateInputs.appendChild(row);
     });
-
-    this.validatePreferencesRealtime();
   }
 
-  validatePreferencesRealtime() {
+  validateDuplicateRanks() {
     const inputs = Array.from(this.ballotCandidateInputs.querySelectorAll('.rank-box-input'));
-    const rankMap = new Map(); // rank -> array of inputs
+    const rankMap = new Map();
 
     inputs.forEach(inp => {
       inp.classList.remove('has-duplicate');
-      inp.closest('.ballot-paper-row')?.classList.remove('has-duplicate-row');
       const val = inp.value.trim();
       if (val) {
         const rank = parseInt(val, 10);
@@ -742,56 +1034,22 @@ class STVApp {
       }
     });
 
-    const duplicates = [];
-    rankMap.forEach((inputList, rank) => {
-      if (inputList.length > 1) {
-        duplicates.push(rank);
-        inputList.forEach(inp => {
-          inp.classList.add('has-duplicate');
-          inp.closest('.ballot-paper-row')?.classList.add('has-duplicate-row');
-        });
+    let hasDuplicate = false;
+    rankMap.forEach((list, rank) => {
+      if (list.length > 1) {
+        hasDuplicate = true;
+        this.duplicateRankNumber.textContent = rank;
+        list.forEach(i => i.classList.add('has-duplicate'));
       }
     });
 
-    if (duplicates.length > 0) {
-      if (this.ballotValidationWarningText && this.ballotValidationWarning) {
-        this.ballotValidationWarningText.textContent = 
-          `Duplicate preference number '${duplicates.join(', ')}' detected! Each candidate must have a unique preference number.`;
-        this.ballotValidationWarning.style.display = 'flex';
-        this.ballotValidationWarning.classList.add('visible');
-      }
-      return false;
-    } else {
-      if (this.ballotValidationWarning) {
-        this.ballotValidationWarning.style.display = 'none';
-        this.ballotValidationWarning.classList.remove('visible');
-      }
-      return true;
-    }
-  }
-
-  clearBallotPaperForm() {
-    const inputs = this.ballotCandidateInputs.querySelectorAll('.rank-box-input');
-    inputs.forEach(inp => {
-      inp.value = '';
-      inp.classList.remove('has-duplicate');
-    });
-    const rows = this.ballotCandidateInputs.querySelectorAll('.ballot-paper-row');
-    rows.forEach(r => {
-      r.classList.remove('marked');
-      r.classList.remove('has-duplicate-row');
-    });
-    if (this.ballotValidationWarning) {
-      this.ballotValidationWarning.style.display = 'none';
-      this.ballotValidationWarning.classList.remove('visible');
-    }
+    this.duplicateRankAlert.style.display = hasDuplicate ? 'flex' : 'none';
+    return !hasDuplicate;
   }
 
   recordBallotFromPaper() {
-    // 1. Validate for duplicates first
-    const isValid = this.validatePreferencesRealtime();
-    if (!isValid) {
-      alert("Error: Duplicate preference numbers detected on this ballot paper! Each candidate must have a unique rank (no repeats allowed).");
+    if (!this.validateDuplicateRanks()) {
+      this.showToast("Cannot log ballot: duplicate preference numbers detected.", "warning");
       return;
     }
 
@@ -802,136 +1060,61 @@ class STVApp {
       const val = inp.value.trim();
       if (val) {
         const rank = parseInt(val, 10);
-        const candName = inp.getAttribute('data-candidate');
-        if (!isNaN(rank) && rank > 0) {
-          marked.push({ rank, candName });
+        if (!isNaN(rank)) {
+          marked.push({ name: inp.dataset.candidate, rank });
         }
       }
     });
 
     if (marked.length === 0) {
-      alert("Please mark at least one candidate preference number (1, 2, 3...) in the ballot paper boxes.");
-      const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-      if (firstInput) firstInput.focus();
+      this.showToast("Mark at least one preference before logging ballot.", "warning");
       return;
     }
 
-    // Sort by marked preference order (1st, 2nd, 3rd...)
     marked.sort((a, b) => a.rank - b.rank);
-    const orderedPrefs = marked.map(m => m.candName);
+    const prefs = marked.map(m => m.name);
 
-    // Each entry is exactly ONE physical ballot slip
-    let serial = this.inputBallotSerial.value.trim();
-    if (!serial) {
-      serial = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
-    }
+    const serial = this.inputBallotSerial.value.trim() || `BAL-${String(this.serialCounter).padStart(4, '0')}`;
+    const count = parseInt(this.inputBallotCount.value, 10) || 1;
 
-    // Add entry to registry
-    this.ballotEntries.push({
-      serial,
-      count: 1,
-      prefs: orderedPrefs,
-      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    });
-
-    // Auto increment serial counter for next slip
+    this.ballotEntries.push({ serial, count, prefs });
     this.serialCounter++;
     this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
-    this.updateSerialButtonLabel();
+    this.inputBallotCount.value = 1;
 
-    this.clearBallotPaperForm();
-    this.selectPreset.value = 'custom';
+    // Clear inputs
+    inputs.forEach(inp => {
+      inp.value = '';
+      inp.closest('.ballot-paper-row').classList.remove('marked');
+    });
+
     this.renderBallotTable();
     this.syncRawTextarea();
-
-    // Confirmation feedback
-    this.showQuickFeedback(`Ballot ${serial} recorded`);
-
-    // Auto-focus first candidate's input for high-speed sequential data entry
-    const firstInput = this.ballotCandidateInputs.querySelector('.rank-box-input');
-    if (firstInput) {
-      firstInput.focus();
-      firstInput.select();
-    }
+    this.showToast(`Logged ${count} ballot(s) as ${serial}.`, "success");
   }
-
-  showQuickFeedback(msg) {
-    const pill = this.ballotBoxTotalPill;
-    const oldBg = pill.style.backgroundColor;
-    pill.textContent = `✓ ${msg}`;
-    pill.style.backgroundColor = 'rgba(16, 185, 129, 0.25)';
-    setTimeout(() => {
-      this.renderBallotTable();
-      pill.style.backgroundColor = oldBg;
-    }, 1800);
-  }
-
-  // =========================================================================
-  // SERIALIZED BALLOT REGISTRY TABLE & AUDIT SLIP
-  // =========================================================================
 
   renderBallotTable() {
     this.ballotTableBody.innerHTML = '';
-    const query = this.searchBallotInput.value.trim().toLowerCase();
     let totalBallots = 0;
-
-    if (this.ballotEntries.length === 0) {
-      this.ballotBoxTotalPill.textContent = '0 Total Ballots';
-      const emptyTr = document.createElement('tr');
-      emptyTr.innerHTML = `
-        <td colspan="3" style="text-align: center; padding: 2.5rem 1rem; color: var(--text-muted);">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🗳️</div>
-          <div style="font-weight: 600; color: var(--text-secondary); font-size: 1rem; margin-bottom: 0.25rem;">Ballot Box is Empty (0 Ballots)</div>
-          <div style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1rem;">Mark physical rankings in the Ballot Paper form above, or load sample election data below.</div>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-empty-load-sample" style="display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 auto;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Load Sample Election (100 Ballots)
-          </button>
-        </td>
-      `;
-      emptyTr.querySelector('#btn-empty-load-sample')?.addEventListener('click', () => {
-        this.loadSampleData();
-      });
-      this.ballotTableBody.appendChild(emptyTr);
-      return;
-    }
 
     this.ballotEntries.forEach((entry, idx) => {
       totalBallots += entry.count;
-
-      // Filter by search query (checks serial or candidate names)
-      if (query) {
-        const matchesSerial = entry.serial.toLowerCase().includes(query);
-        const matchesCandidate = entry.prefs.some(p => p.toLowerCase().includes(query));
-        if (!matchesSerial && !matchesCandidate) return;
-      }
-
       const tr = document.createElement('tr');
-
-      const prefChainHtml = entry.prefs
-        .map((p, i) => `<strong>${i + 1}.</strong> ${p}`)
-        .join(' <span style="color: var(--text-muted);">&rarr;</span> ');
-
       tr.innerHTML = `
-        <td><span class="serial-tag">${entry.serial}</span></td>
-        <td>${prefChainHtml}</td>
+        <td><code>${entry.serial}</code></td>
+        <td><strong>${entry.count}</strong></td>
+        <td>
+          <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+            ${entry.prefs.map((p, pIdx) => `<span class="pref-badge">${pIdx + 1}. ${p}</span>`).join('')}
+          </div>
+        </td>
         <td style="text-align: right;">
-          <button type="button" class="btn btn-secondary btn-sm btn-audit-row" style="padding: 0.25rem 0.55rem; font-size: 0.75rem;" title="Audit Verification Slip">
-            Verify
-          </button>
-          <button type="button" class="btn-roster-action delete btn-delete-row" title="Delete ballot entry" aria-label="Delete entry" style="display: inline-flex; vertical-align: middle; margin-left: 0.25rem;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-          </button>
+          <button type="button" class="btn btn-ghost btn-sm btn-delete-ballot" title="Delete ballot entry" style="padding: 0.2rem 0.5rem; color: #f87171;">✕</button>
         </td>
       `;
 
-      tr.querySelector('.btn-audit-row').addEventListener('click', () => {
-        this.openAuditSlipModal(entry);
-      });
-
-      tr.querySelector('.btn-delete-row').addEventListener('click', () => {
+      tr.querySelector('.btn-delete-ballot').addEventListener('click', () => {
         this.ballotEntries.splice(idx, 1);
-        this.selectPreset.value = 'custom';
         this.renderBallotTable();
         this.syncRawTextarea();
       });
@@ -942,124 +1125,90 @@ class STVApp {
     this.ballotBoxTotalPill.textContent = `${totalBallots} Total Ballots`;
   }
 
-  openAuditSlipModal(entry) {
-    this.ballotAuditSlipContent.innerHTML = `
-      <div class="audit-slip-box">
-        <div class="audit-slip-header">
-          <div>
-            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Ballot Identifier</div>
-            <div class="audit-slip-serial">${entry.serial}</div>
-          </div>
-          <div style="text-align: right;">
-            <span class="status-tag hopeful">Verified Entry</span>
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Time: ${entry.timestamp || 'Recorded'}</div>
-          </div>
-        </div>
-
-        <div style="margin-bottom: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
-          <strong>Voter Slip Count:</strong> ${entry.count} ballot(s) registered with this exact marked preference order.
-        </div>
-
-        <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.4rem;">
-          Physical Preference Marks Entered:
-        </div>
-
-        <div class="audit-pref-list">
-          ${entry.prefs.map((candName, idx) => {
-            const candObj = this.candidates.find(c => c.name === candName);
-            const dept = candObj ? candObj.dept : "Department";
-            return `
-              <div class="audit-pref-item">
-                <div class="audit-rank-number">${idx + 1}</div>
-                <div style="flex: 1;">
-                  <strong style="color: var(--text-primary); font-size: 0.9rem;">${candName}</strong>
-                  <span style="font-size: 0.75rem; color: var(--accent-cyan); margin-left: 0.4rem;">(${dept})</span>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div style="background: var(--bg-surface); padding: 0.75rem; border-radius: var(--radius-xs); border: 1px solid var(--border-subtle); font-size: 0.78rem; color: var(--text-muted); margin-top: 1rem;">
-          <strong>Scrutineer Verification Note:</strong> This record matches physical ballot slip <code>${entry.serial}</code>. During the preferential count, this ballot's weight transfers sequentially to each remaining active candidate listed above.
-        </div>
-      </div>
-    `;
-
-    this.modalAuditBallot.classList.add('open');
-  }
-
-  closeAuditModal() {
-    this.modalAuditBallot.classList.remove('open');
-  }
-
   syncRawTextarea() {
-    const lines = this.ballotEntries.map(b => `${b.count} : ${b.prefs.join(' > ')}`);
+    const lines = this.ballotEntries.map(e => `${e.count} : ${e.prefs.join(' > ')}`);
     this.textareaBallots.value = lines.join('\n');
   }
 
-  parseRawTextarea() {
-    const text = this.textareaBallots.value;
-    const lines = text.split('\n');
-    const newEntries = [];
+  applyRawText() {
+    const raw = this.textareaBallots.value.trim();
+    if (!raw) return;
 
-    lines.forEach((line, idx) => {
+    const lines = raw.split(/\r?\n/);
+    const parsed = [];
+    let counter = 1;
+
+    for (const line of lines) {
       const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('#')) return;
+      if (!trimmed || trimmed.startsWith('#')) continue;
+
+      let count = 1;
+      let prefsStr = trimmed;
 
       if (trimmed.includes(':')) {
         const parts = trimmed.split(':');
-        const count = parseInt(parts[0].trim(), 10) || 1;
-        const prefs = parts[1].split('>').map(s => s.trim()).filter(Boolean);
-        if (prefs.length > 0) {
-          newEntries.push({
-            serial: `RAW-${String(idx + 1).padStart(4, '0')}`,
-            count,
-            prefs,
-            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          });
-        }
+        count = parseInt(parts[0].trim(), 10) || 1;
+        prefsStr = parts[1].trim();
       }
-    });
 
-    if (newEntries.length === 0) {
-      alert("No valid ballots found in raw text.");
-      return;
+      const prefs = prefsStr.split(/[>,]/).map(p => p.trim()).filter(Boolean);
+      if (prefs.length > 0) {
+        parsed.push({
+          serial: `BAL-${String(counter++).padStart(4, '0')}`,
+          count,
+          prefs
+        });
+      }
     }
 
-    this.ballotEntries = newEntries;
-    this.selectPreset.value = 'custom';
+    if (parsed.length > 0) {
+      this.ballotEntries = parsed;
+      this.renderBallotTable();
+      this.showToast(`Applied ${parsed.length} raw ballot groups.`, "info");
+    }
+  }
+
+  exportJsonRegistry() {
+    const data = {
+      preset: this.currentPresetKey,
+      seats: this.seats,
+      quotaType: this.quotaType,
+      candidates: this.candidates,
+      ballots: this.ballotEntries,
+      exportedAt: new Date().toISOString()
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `stv_ballot_registry_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  clearAllBallots() {
+    this.ballotEntries = [];
+    this.serialCounter = 1;
+    this.inputBallotSerial.value = `BAL-0001`;
     this.renderBallotTable();
-    alert("Raw ballot data applied successfully to registry.");
+    this.syncRawTextarea();
+    this.resetSimulation();
+    this.showToast("Ballot box cleared to 0 ballots.", "info");
   }
 
   // =========================================================================
-  // EXECUTE ELECTION & TALLY COUNT
+  // SIMULATION & DEMONSTRATIVE LIVE COMMENTARY ENGINE
   // =========================================================================
 
-  runTallyFromCurrentSetup(switchToSim = true) {
-    if (this.candidates.length < 2) {
-      if (switchToSim) {
-        this.showToast("At least 2 candidates are required to conduct an election.", "warning");
-      }
-      return;
-    }
-    if (this.seats < 1 || this.seats >= this.candidates.length) {
-      if (switchToSim) {
-        this.showToast(`Vacancies (${this.seats}) must be between 1 and ${this.candidates.length - 1}.`, "warning");
-      }
-      return;
-    }
+  calculateAndTally(switchToSim = false) {
+    if (this.candidates.length < 2) return;
     if (this.ballotEntries.length === 0) {
-      if (switchToSim) {
-        this.showToast("Ballot box is empty. Enter physical ballots above or click 'Load Sample Data'.", "warning");
-      }
+      if (switchToSim) this.showToast("Ballot box is empty.", "warning");
       return;
     }
 
-    // Compile into Ballot instances with serial tracking
     const ballots = [];
-    this.ballotEntries.forEach((entry, eIdx) => {
+    this.ballotEntries.forEach(entry => {
       for (let i = 0; i < entry.count; i++) {
         const slipId = entry.count === 1 ? entry.serial : `${entry.serial}#${i + 1}`;
         ballots.push(new Ballot(entry.prefs, 1.0, slipId));
@@ -1073,6 +1222,7 @@ class STVApp {
       const stv = new STVElection(candNames, this.seats, this.quotaType);
       this.electionResult = stv.count(this.compiledBallots);
       this.currentRoundIdx = 0;
+      this.currentSubstepIdx = 0;
       this.pause();
       this.render();
 
@@ -1080,13 +1230,9 @@ class STVApp {
         this.switchTab('sim');
       }
     } catch (err) {
-      alert(`Election count error: ${err.message}`);
+      alert(`Election calculation error: ${err.message}`);
     }
   }
-
-  // =========================================================================
-  // SIMULATION RENDERING & STEPPER
-  // =========================================================================
 
   stepRound(delta) {
     if (!this.electionResult) return;
@@ -1094,6 +1240,7 @@ class STVApp {
     const nextIdx = this.currentRoundIdx + delta;
     if (nextIdx >= 0 && nextIdx <= maxIdx) {
       this.currentRoundIdx = nextIdx;
+      this.currentSubstepIdx = 0;
       this.render();
     }
   }
@@ -1101,7 +1248,36 @@ class STVApp {
   jumpToRound(idx) {
     if (!this.electionResult) return;
     this.currentRoundIdx = Math.max(0, Math.min(idx, this.electionResult.rounds.length - 1));
+    this.currentSubstepIdx = 0;
     this.render();
+  }
+
+  stepSubstep(delta) {
+    if (!this.electionResult) return;
+    const round = this.electionResult.rounds[this.currentRoundIdx];
+    const steps = round.demonstrativeSteps || [];
+    if (steps.length === 0) return;
+
+    const nextSub = this.currentSubstepIdx + delta;
+    if (nextSub >= 0 && nextSub < steps.length) {
+      this.currentSubstepIdx = nextSub;
+      this.renderDemonstrativeCommentary(round);
+    } else if (nextSub >= steps.length) {
+      // Advance to next round if available
+      if (this.currentRoundIdx < this.electionResult.rounds.length - 1) {
+        this.currentRoundIdx++;
+        this.currentSubstepIdx = 0;
+        this.render();
+      }
+    } else if (nextSub < 0) {
+      // Go to previous round's last step
+      if (this.currentRoundIdx > 0) {
+        this.currentRoundIdx--;
+        const prevRound = this.electionResult.rounds[this.currentRoundIdx];
+        this.currentSubstepIdx = (prevRound.demonstrativeSteps || []).length - 1;
+        this.render();
+      }
+    }
   }
 
   togglePlay() {
@@ -1118,8 +1294,15 @@ class STVApp {
     this.playPauseText.textContent = 'Pause';
     this.playTimer = setInterval(() => {
       const maxIdx = this.electionResult.rounds.length - 1;
-      if (this.currentRoundIdx < maxIdx) {
+      const round = this.electionResult.rounds[this.currentRoundIdx];
+      const steps = round.demonstrativeSteps || [];
+
+      if (this.currentSubstepIdx < steps.length - 1) {
+        this.currentSubstepIdx++;
+        this.renderDemonstrativeCommentary(round);
+      } else if (this.currentRoundIdx < maxIdx) {
         this.currentRoundIdx++;
+        this.currentSubstepIdx = 0;
         this.render();
       } else {
         this.pause();
@@ -1137,6 +1320,13 @@ class STVApp {
     }
   }
 
+  resetSimulation() {
+    this.pause();
+    this.currentRoundIdx = 0;
+    this.currentSubstepIdx = 0;
+    this.render();
+  }
+
   render() {
     if (!this.electionResult) return;
 
@@ -1145,9 +1335,9 @@ class STVApp {
     const quota = this.electionResult.quota;
     const totalVotes = this.electionResult.totalValidVotes;
 
-    // KPI Metrics
+    // KPIs
     this.kpiTotalVotes.textContent = totalVotes.toFixed(2);
-    this.kpiTotalBallots.textContent = `${this.compiledBallots.length} verified ballots cast`;
+    this.kpiTotalBallots.textContent = `${this.compiledBallots.length} verified ballots logged`;
     this.kpiQuota.textContent = quota.toFixed(2);
     this.kpiQuotaType.textContent = this.quotaType === 'droop' 
       ? `Droop Quota: ⌊Votes / (${this.seats} + 1)⌋ + 1` 
@@ -1158,12 +1348,12 @@ class STVApp {
       .map(([cand]) => cand);
 
     this.kpiSeatsStatus.textContent = `${currentlyElected.length} / ${this.seats} Filled`;
-    this.kpiSeatsSubtext = `${this.seats - currentlyElected.length} vacancies remaining`;
+    this.kpiSeatsSubtext.textContent = `${this.seats - currentlyElected.length} vacancies remaining`;
 
     this.kpiRoundNum.textContent = `Round ${round.roundNumber}`;
     this.kpiTotalRounds.textContent = `of ${totalRounds} total count rounds`;
 
-    // Stepper Controls
+    // Steppers
     this.roundIndicator.textContent = `Round ${round.roundNumber} of ${totalRounds}`;
     this.btnPrev.disabled = this.currentRoundIdx === 0;
     this.btnFirst.disabled = this.currentRoundIdx === 0;
@@ -1179,9 +1369,115 @@ class STVApp {
     const exhaustedPct = totalVotes > 0 ? (round.exhaustedVotes / totalVotes) * 100 : 0;
     this.exhaustedVotesCount.textContent = `${round.exhaustedVotes.toFixed(4)} votes (${exhaustedPct.toFixed(1)}%)`;
 
-    // Audit narrative & timeline
+    // Demonstrative Observer Commentary
+    this.renderDemonstrativeCommentary(round);
+
+    // Timeline & Banner
     this.renderAuditPanel(round);
     this.renderTimeline();
+  }
+
+  renderDemonstrativeCommentary(round) {
+    const steps = round.demonstrativeSteps || [];
+    if (steps.length === 0) {
+      this.demoCommentaryBox.innerHTML = '<div style="color: var(--text-muted);">No detailed sub-step data.</div>';
+      return;
+    }
+
+    if (this.currentSubstepIdx >= steps.length) {
+      this.currentSubstepIdx = steps.length - 1;
+    }
+
+    const step = steps[this.currentSubstepIdx];
+    this.demoSubstepIndicator.textContent = `Step ${step.stepNumber} of ${steps.length}`;
+
+    let stageClass = 'declaration';
+    if (step.stage.includes('ELIMIN')) stageClass = 'elimination';
+
+    let mathCardHtml = '';
+    if (step.metrics && step.metrics.surplus !== undefined) {
+      mathCardHtml = `
+        <div class="demo-math-card">
+          <div class="demo-math-item">
+            <div class="demo-math-label">Winner Total</div>
+            <div class="demo-math-val">${step.metrics.totalVotes.toFixed(4)}</div>
+          </div>
+          <div class="demo-math-item">
+            <div class="demo-math-label">Winning Quota</div>
+            <div class="demo-math-val" style="color: var(--quota-marker-color);">${step.metrics.quota.toFixed(4)}</div>
+          </div>
+          <div class="demo-math-item">
+            <div class="demo-math-label">Surplus Votes</div>
+            <div class="demo-math-val" style="color: #34d399;">+${step.metrics.surplus.toFixed(4)}</div>
+          </div>
+          <div class="demo-math-item">
+            <div class="demo-math-label">Transfer Value Factor</div>
+            <div class="demo-math-val" style="color: #38bdf8;">${step.metrics.transferFactor.toFixed(6)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    let transferTableHtml = '';
+    if (step.breakdown && step.breakdown.length > 0) {
+      let rows = '';
+      step.breakdown.forEach(b => {
+        rows += `
+          <tr>
+            <td><strong>${b.candidate}</strong></td>
+            <td><code>${b.ballotCount}</code></td>
+            <td class="val-highlight">+${b.transferredValue.toFixed(4)}</td>
+            <td style="color: var(--text-muted);">${(b.previousVotes || 0).toFixed(4)}</td>
+            <td><strong>${(b.newVotes || 0).toFixed(4)}</strong></td>
+          </tr>
+        `;
+      });
+
+      transferTableHtml = `
+        <div style="margin-top: 0.75rem;">
+          <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; margin-bottom: 0.35rem;">
+            📊 2nd & Subsequent Preferences Distribution
+          </div>
+          <div class="demo-table-wrap">
+            <table class="demo-transfer-table">
+              <thead>
+                <tr>
+                  <th>Continuing Candidate</th>
+                  <th>Ballots</th>
+                  <th>Transferred Value</th>
+                  <th>Prior Tally</th>
+                  <th>New Tally</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${rows}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    this.demoCommentaryBox.className = `demonstrative-box ${stageClass}`;
+    this.demoCommentaryBox.innerHTML = `
+      <div class="demo-header-row">
+        <span class="demo-stage-tag">${step.title}</span>
+        <span style="font-size: 0.75rem; color: var(--text-muted);">${step.subtitle}</span>
+      </div>
+
+      <div class="demo-quote-bubble ${stageClass}">
+        <span class="demo-quote-icon">📢</span>
+        ${step.narrative}
+      </div>
+
+      ${mathCardHtml}
+      ${transferTableHtml}
+    `;
+
+    // Trigger voice announcement
+    if (this.voiceEnabled) {
+      this.speak(step.speechText || step.narrative);
+    }
   }
 
   renderCandidateCards(round, quota) {
@@ -1200,52 +1496,53 @@ class STVApp {
       return vB - vA;
     });
 
-    const maxVal = Math.max(quota * 1.3, ...Object.values(round.tallies));
+    const maxScale = Math.max(quota * 1.35, ...this.candidates.map(c => round.tallies[c.name] || 0), 1);
+    const quotaPct = Math.min(100, (quota / maxScale) * 100);
 
     sorted.forEach(cand => {
+      const votes = round.tallies[cand.name] || 0.0;
       const status = round.candidateStatus[cand.name];
-      const votes = round.tallies[cand.name] || 0;
+      const pctOfMax = Math.min(100, (votes / maxScale) * 100);
       const pctOfQuota = quota > 0 ? (votes / quota) * 100 : 0;
-      const barWidthPct = Math.min(100, Math.max(0, (votes / maxVal) * 100));
-      const quotaMarkerPct = Math.min(100, (quota / maxVal) * 100);
 
       const card = document.createElement('div');
-      card.className = `candidate-card status-${status.toLowerCase()}`;
-      card.setAttribute('role', 'listitem');
+      card.className = `candidate-card ${status.toLowerCase()}`;
 
-      let statusBadgeClass = 'hopeful';
-      let statusBadgeText = 'Hopeful';
+      let tagLabel = 'Hopeful';
+      let tagClass = 'hopeful';
       if (status === CandidateStatus.ELECTED) {
-        statusBadgeClass = 'elected';
-        const seatNum = this.electionResult.electedCandidates.indexOf(cand.name) + 1;
-        statusBadgeText = `✓ Elected (Seat #${seatNum})`;
+        tagLabel = '✓ Elected';
+        tagClass = 'elected';
       } else if (status === CandidateStatus.ELIMINATED) {
-        statusBadgeClass = 'eliminated';
-        statusBadgeText = '✗ Eliminated';
+        tagLabel = '✗ Eliminated';
+        tagClass = 'eliminated';
       }
 
       card.innerHTML = `
         <div class="candidate-header">
-          <div class="candidate-meta">
-            <div class="candidate-avatar" style="background: ${cand.color};">
+          <div class="candidate-info">
+            <div class="candidate-avatar" style="background: ${cand.color}">
               ${cand.name.charAt(0)}
             </div>
             <div>
               <div class="candidate-name">${cand.name}</div>
-              <div class="candidate-dept-label">Dept: ${cand.dept}</div>
+              <div class="candidate-dept">${cand.dept}</div>
             </div>
           </div>
-          <span class="status-tag ${statusBadgeClass}">${statusBadgeText}</span>
+          <div class="candidate-meta">
+            <span class="status-tag ${tagClass}">${tagLabel}</span>
+            <div class="vote-total-badge">${votes.toFixed(4)}</div>
+          </div>
         </div>
 
-        <div class="tally-bar-wrapper">
-          <div class="tally-quota-line" style="left: ${quotaMarkerPct}%;" title="Winning Quota (${quota.toFixed(2)})"></div>
-          <div class="tally-bar-fill" style="width: ${barWidthPct}%; background: ${status === CandidateStatus.ELECTED ? '' : cand.color};"></div>
+        <div class="progress-track" aria-label="Votes progress towards quota">
+          <div class="quota-line-marker" style="left: ${quotaPct.toFixed(1)}%;" title="Winning Quota: ${quota.toFixed(4)}"></div>
+          <div class="progress-fill ${status.toLowerCase()}" style="width: ${pctOfMax.toFixed(1)}%;"></div>
         </div>
 
-        <div class="candidate-stats">
+        <div class="card-footer">
           <div>
-            <span class="vote-count-highlight">${votes.toFixed(4)}</span> votes
+            <span>${votes.toFixed(4)}</span> / ${quota.toFixed(4)}
           </div>
           <div>
             <span>${pctOfQuota.toFixed(1)}%</span> of Quota
@@ -1299,6 +1596,7 @@ class STVApp {
 
       item.addEventListener('click', () => {
         this.currentRoundIdx = idx;
+        this.currentSubstepIdx = 0;
         this.render();
       });
 
@@ -1306,100 +1604,17 @@ class STVApp {
     });
   }
 
-  clearAllBallots() {
-    this.ballotEntries = [];
-    this.serialCounter = 1;
-    this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
-    this.updateSerialButtonLabel();
-    this.clearBallotPaperForm();
-    this.renderBallotTable();
-    this.syncRawTextarea();
-
-    // Reset simulation metrics & compiled state
-    this.compiledBallots = [];
-    this.electionResult = null;
-    this.kpiTotalVotes.textContent = '0.00';
-    this.kpiTotalBallots.textContent = '0 verified ballots cast';
-    this.kpiSeatsStatus.textContent = `0 / ${this.seats} Filled`;
-    this.kpiRoundNum.textContent = 'Round 0';
-    this.kpiTotalRounds.textContent = 'Awaiting ballot entry';
-    this.roundIndicator.textContent = 'No Tally Computed';
-    this.ballotBoxTotalPill.textContent = '0 Total Ballots';
-
-    if (this.candidatesContainer) {
-      this.candidatesContainer.innerHTML = `
-        <div style="text-align: center; padding: 3rem 1.5rem; color: var(--text-muted);">
-          <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🗳️</div>
-          <div style="font-weight: 700; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.35rem;">Ballot Box Reset to 0 Ballots</div>
-          <div style="font-size: 0.85rem; max-width: 400px; margin: 0 auto 1.25rem;">The ballot box is currently empty. Record physical paper ballots in the Ballot Entry tab, or load sample election data below.</div>
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-sim-load-sample" style="display: inline-flex; align-items: center; gap: 0.4rem; margin: 0 auto;">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            Load Sample Election (100 Ballots)
-          </button>
-        </div>
-      `;
-      this.candidatesContainer.querySelector('#btn-sim-load-sample')?.addEventListener('click', () => {
-        this.loadSampleData();
-      });
-    }
-
-    this.showToast('🗑️ Ballot box emptied. All ballots reset to 0. Serial number reset to BAL-0001.', 'info');
-  }
-
-  loadSampleData(presetKey = 'faculty_senate') {
-    this.loadPreset(presetKey);
-    this.showToast(`📋 Sample election data loaded (${this.ballotEntries.length} ballots, ${this.candidates.length} candidates).`, 'success');
-  }
-
   showToast(message, type = 'info') {
-    if (!this.appToast) {
-      this.appToast = document.getElementById('app-toast');
-    }
     if (!this.appToast) return;
-
     this.appToast.textContent = message;
     this.appToast.className = `app-toast visible ${type}`;
-
-    if (this._toastTimer) clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => {
-      this.appToast.className = 'app-toast';
-    }, 3800);
-  }
-
-  exportJson() {
-    if (!this.electionResult) return;
-    const data = {
-      timestamp: new Date().toISOString(),
-      candidates: this.candidates,
-      seats: this.seats,
-      quotaType: this.quotaType,
-      quota: this.electionResult.quota,
-      totalValidVotes: this.electionResult.totalValidVotes,
-      ballotEntries: this.ballotEntries,
-      electedCandidates: this.electionResult.electedCandidates,
-      rounds: this.electionResult.rounds,
-    };
-
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `stv_election_registry_${Date.now()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  }
-
-  toggleTheme() {
-    const root = document.documentElement;
-    const isDark = root.getAttribute('data-theme') === 'dark';
-    const nextTheme = isDark ? 'light' : 'dark';
-    root.setAttribute('data-theme', nextTheme);
-    this.themeIcon.textContent = nextTheme === 'dark' ? '🌙' : '☀️';
+    setTimeout(() => {
+      this.appToast.classList.remove('visible');
+    }, 3500);
   }
 }
 
+// Instantiate application on window load
 window.addEventListener('DOMContentLoaded', () => {
-  new STVApp();
+  window.app = new STVApp();
 });
