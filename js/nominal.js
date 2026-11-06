@@ -765,13 +765,18 @@ export class NominalRollService {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          const hasOldMock = parsed.some(p => (p.rollNo && p.rollNo.startsWith('24-')) || (p.id && p.id.startsWith('VOT-')));
+          if (!hasOldMock) {
+            return parsed;
+          }
         }
       }
     } catch (e) {
       console.warn("Could not load stored nominal roll, using default", e);
     }
-    return [...INITIAL_NOMINAL_ROLL];
+    const initial = [...INITIAL_NOMINAL_ROLL];
+    this.save(initial);
+    return initial;
   }
 
   save() {
