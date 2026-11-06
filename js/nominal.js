@@ -1,54 +1,755 @@
 /**
  * Nominal Rolls Registry & Public Voter Directory
  * ================================================
- * Stores, queries, and manages voter eligibility data across academic departments.
+ * Government College Chittur - College Staff Council Election 2026-27
+ * Official List of 93 Faculty Members.
  */
 
 export const INITIAL_NOMINAL_ROLL = [
-  // Computer Science
-  { id: "VOT-1001", rollNo: "24-CS-001", name: "Aaron Mathew", dept: "Computer Science", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1002", rollNo: "24-CS-002", name: "Aiswarya Rajan", dept: "Computer Science", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1003", rollNo: "24-CS-003", name: "Akash Sharma", dept: "Computer Science", year: "Semester 5", status: "Ballot Issued" },
-  { id: "VOT-1004", rollNo: "24-CS-004", name: "Ananya Pillai", dept: "Computer Science", year: "Semester 1", status: "Eligible" },
-  { id: "VOT-1005", rollNo: "24-CS-005", name: "Basil K. George", dept: "Computer Science", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1006", rollNo: "24-CS-006", name: "Fathima Noora", dept: "Computer Science", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1007", rollNo: "24-CS-007", name: "Gautham Krishna", dept: "Computer Science", year: "Semester 5", status: "Eligible" },
-
-  // Physics
-  { id: "VOT-1008", rollNo: "24-PH-001", name: "Hafiz Mohammed", dept: "Physics", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1009", rollNo: "24-PH-002", name: "Haritha Nair", dept: "Physics", year: "Semester 1", status: "Eligible" },
-  { id: "VOT-1010", rollNo: "24-PH-003", name: "Joel Joseph", dept: "Physics", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1011", rollNo: "24-PH-004", name: "Karthika Menon", dept: "Physics", year: "Semester 3", status: "Ballot Issued" },
-  { id: "VOT-1012", rollNo: "24-PH-005", name: "Mridula Varma", dept: "Physics", year: "Semester 5", status: "Eligible" },
-
-  // Mathematics
-  { id: "VOT-1013", rollNo: "24-MA-001", name: "Nandana S.", dept: "Mathematics", year: "Semester 1", status: "Eligible" },
-  { id: "VOT-1014", rollNo: "24-MA-002", name: "Nikhil Das", dept: "Mathematics", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1015", rollNo: "24-MA-003", name: "Pranav Mohan", dept: "Mathematics", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1016", rollNo: "24-MA-004", name: "Rhea Thomas", dept: "Mathematics", year: "Semester 3", status: "Eligible" },
-
-  // Commerce
-  { id: "VOT-1017", rollNo: "24-CM-001", name: "Rohit Nambiar", dept: "Commerce", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1018", rollNo: "24-CM-002", name: "Sana Mariyam", dept: "Commerce", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1019", rollNo: "24-CM-003", name: "Siddharth Paul", dept: "Commerce", year: "Semester 1", status: "Ballot Issued" },
-  { id: "VOT-1020", rollNo: "24-CM-004", name: "Sneha Kurian", dept: "Commerce", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1021", rollNo: "24-CM-005", name: "Varun Vinod", dept: "Commerce", year: "Semester 3", status: "Eligible" },
-
-  // Economics
-  { id: "VOT-1022", rollNo: "24-EC-001", name: "Aditi Ramesh", dept: "Economics", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1023", rollNo: "24-EC-002", name: "Devika Prasad", dept: "Economics", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1024", rollNo: "24-EC-003", name: "Irfan Habeeb", dept: "Economics", year: "Semester 1", status: "Eligible" },
-  { id: "VOT-1025", rollNo: "24-EC-004", name: "Kiran Jacob", dept: "Economics", year: "Semester 3", status: "Eligible" },
-
-  // Botany
-  { id: "VOT-1026", rollNo: "24-BO-001", name: "Athira Sreekumar", dept: "Botany", year: "Semester 5", status: "Eligible" },
-  { id: "VOT-1027", rollNo: "24-BO-002", name: "Cyril Peter", dept: "Botany", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1028", rollNo: "24-BO-003", name: "Gayathri Unni", dept: "Botany", year: "Semester 1", status: "Eligible" },
-
-  // English
-  { id: "VOT-1029", rollNo: "24-EN-001", name: "Farhan Ali", dept: "English", year: "Semester 3", status: "Eligible" },
-  { id: "VOT-1030", rollNo: "24-EN-002", name: "Meera Krishnan", dept: "English", year: "Semester 5", status: "Ballot Issued" },
-  { id: "VOT-1031", rollNo: "24-EN-003", name: "Vivek Sundar", dept: "English", year: "Semester 1", status: "Eligible" }
+  {
+    "id": "TCH-001",
+    "rollNo": "GCC-001",
+    "name": "PRADEEP KUMAR B",
+    "dept": "Principal",
+    "year": "Principal",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-002",
+    "rollNo": "GCC-002",
+    "name": "SHAFI T",
+    "dept": "Arabic",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-003",
+    "rollNo": "GCC-003",
+    "name": "SMITHA JOSE K",
+    "dept": "Botany",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-004",
+    "rollNo": "GCC-004",
+    "name": "SURESH KUMAR K A",
+    "dept": "Botany",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-005",
+    "rollNo": "GCC-005",
+    "name": "SURESH V",
+    "dept": "Botany",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-006",
+    "rollNo": "GCC-006",
+    "name": "ANJU AJAYAN",
+    "dept": "Chemistry",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-007",
+    "rollNo": "GCC-007",
+    "name": "DEEPA MUKUNDAN",
+    "dept": "Chemistry",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-008",
+    "rollNo": "GCC-008",
+    "name": "NISHAD K M",
+    "dept": "Chemistry",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-009",
+    "rollNo": "GCC-009",
+    "name": "RIJULAL G",
+    "dept": "Chemistry",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-010",
+    "rollNo": "GCC-010",
+    "name": "VIJAYASREE HARIDAS",
+    "dept": "Chemistry",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-011",
+    "rollNo": "GCC-011",
+    "name": "ANOOP P",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-012",
+    "rollNo": "GCC-012",
+    "name": "ASWATHY P J",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-013",
+    "rollNo": "GCC-013",
+    "name": "LAKSHMANAN M P",
+    "dept": "Commerce",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-014",
+    "rollNo": "GCC-014",
+    "name": "LEENA T U",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-015",
+    "rollNo": "GCC-015",
+    "name": "NAZEEM S T",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-016",
+    "rollNo": "GCC-016",
+    "name": "PRADEESH K",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-017",
+    "rollNo": "GCC-017",
+    "name": "VIPIN V",
+    "dept": "Commerce",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-018",
+    "rollNo": "GCC-018",
+    "name": "ANOOP KUMAR K",
+    "dept": "Computer Science",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-019",
+    "rollNo": "GCC-019",
+    "name": "AJITHA R",
+    "dept": "Economics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-020",
+    "rollNo": "GCC-020",
+    "name": "BREJESH N S",
+    "dept": "Economics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-021",
+    "rollNo": "GCC-021",
+    "name": "JISHA KK",
+    "dept": "Economics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-022",
+    "rollNo": "GCC-022",
+    "name": "KAVITHA A C",
+    "dept": "Economics",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-023",
+    "rollNo": "GCC-023",
+    "name": "MANJU VARGHESE",
+    "dept": "Economics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-024",
+    "rollNo": "GCC-024",
+    "name": "NAGARAJ S",
+    "dept": "Economics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-025",
+    "rollNo": "GCC-025",
+    "name": "PARVATHY P",
+    "dept": "Economics",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-026",
+    "rollNo": "GCC-026",
+    "name": "SUMATHY M",
+    "dept": "Economics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-027",
+    "rollNo": "GCC-027",
+    "name": "ANISH KUMAR M S",
+    "dept": "Electronics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-028",
+    "rollNo": "GCC-028",
+    "name": "NISHAMOL M S",
+    "dept": "Electronics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-029",
+    "rollNo": "GCC-029",
+    "name": "SARIN V P",
+    "dept": "Electronics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-030",
+    "rollNo": "GCC-030",
+    "name": "SREEJITH M NAIR",
+    "dept": "Electronics",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-031",
+    "rollNo": "GCC-031",
+    "name": "JOSNA RAJAN",
+    "dept": "English",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-032",
+    "rollNo": "GCC-032",
+    "name": "NAJEEB P M",
+    "dept": "English",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-033",
+    "rollNo": "GCC-033",
+    "name": "RESHMA MAJEED",
+    "dept": "English",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-034",
+    "rollNo": "GCC-034",
+    "name": "SHEEJU N V",
+    "dept": "English",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-035",
+    "rollNo": "GCC-035",
+    "name": "SREEKALA K",
+    "dept": "English",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-036",
+    "rollNo": "GCC-036",
+    "name": "JAYARAJAN K",
+    "dept": "Geography",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-037",
+    "rollNo": "GCC-037",
+    "name": "NAZRIN BEGUM S",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-038",
+    "rollNo": "GCC-038",
+    "name": "PANKAJAKSHAN P",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-039",
+    "rollNo": "GCC-039",
+    "name": "PRATHAPAN N",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-040",
+    "rollNo": "GCC-040",
+    "name": "RESHMA C U",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-041",
+    "rollNo": "GCC-041",
+    "name": "ROOBINA A",
+    "dept": "Geography",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-042",
+    "rollNo": "GCC-042",
+    "name": "SURESH P",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-043",
+    "rollNo": "GCC-043",
+    "name": "VINEESH V",
+    "dept": "Geography",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-044",
+    "rollNo": "GCC-044",
+    "name": "ARUNDHATHI MOHAN",
+    "dept": "Hindi",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-045",
+    "rollNo": "GCC-045",
+    "name": "SHALBI MOHANAN",
+    "dept": "Hindi",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-046",
+    "rollNo": "GCC-046",
+    "name": "RAJAN K",
+    "dept": "History",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-047",
+    "rollNo": "GCC-047",
+    "name": "SHEEBA S",
+    "dept": "History",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-048",
+    "rollNo": "GCC-048",
+    "name": "SURESH M",
+    "dept": "History",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-049",
+    "rollNo": "GCC-049",
+    "name": "ANJANA V R",
+    "dept": "Malayalam",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-050",
+    "rollNo": "GCC-050",
+    "name": "SHARJA N",
+    "dept": "Malayalam",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-051",
+    "rollNo": "GCC-051",
+    "name": "SREEDEVI P S",
+    "dept": "Malayalam",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-052",
+    "rollNo": "GCC-052",
+    "name": "SREEPRIYA K",
+    "dept": "Malayalam",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-053",
+    "rollNo": "GCC-053",
+    "name": "SREEVALSAN T",
+    "dept": "Malayalam",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-054",
+    "rollNo": "GCC-054",
+    "name": "G N PRASANTH",
+    "dept": "Mathematics",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-055",
+    "rollNo": "GCC-055",
+    "name": "HASEENA A",
+    "dept": "Mathematics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-056",
+    "rollNo": "GCC-056",
+    "name": "MARY SHALET T J",
+    "dept": "Mathematics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-057",
+    "rollNo": "GCC-057",
+    "name": "NARAYANA PRASAD M",
+    "dept": "Mathematics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-058",
+    "rollNo": "GCC-058",
+    "name": "REJI T",
+    "dept": "Mathematics",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-059",
+    "rollNo": "GCC-059",
+    "name": "RUBY R",
+    "dept": "Mathematics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-060",
+    "rollNo": "GCC-060",
+    "name": "SARATHKUMAR N S",
+    "dept": "Mathematics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-061",
+    "rollNo": "GCC-061",
+    "name": "SHILPA M",
+    "dept": "Mathematics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-062",
+    "rollNo": "GCC-062",
+    "name": "SOWMYA C",
+    "dept": "Mathematics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-063",
+    "rollNo": "GCC-063",
+    "name": "APARNA PRADEEP S K",
+    "dept": "Music",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-064",
+    "rollNo": "GCC-064",
+    "name": "SAVITHRI N V",
+    "dept": "Music",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-065",
+    "rollNo": "GCC-065",
+    "name": "SREEJA K T",
+    "dept": "Music",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-066",
+    "rollNo": "GCC-066",
+    "name": "VIMAL MENON J",
+    "dept": "Music",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-067",
+    "rollNo": "GCC-067",
+    "name": "ABDUL ASEES K P",
+    "dept": "Philosophy",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-068",
+    "rollNo": "GCC-068",
+    "name": "BIJU K P",
+    "dept": "Philosophy",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-069",
+    "rollNo": "GCC-069",
+    "name": "C BINDU",
+    "dept": "Philosophy",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-070",
+    "rollNo": "GCC-070",
+    "name": "MOHANAN P",
+    "dept": "Philosophy",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-071",
+    "rollNo": "GCC-071",
+    "name": "JAGANNADHAN C",
+    "dept": "Physical Education",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-072",
+    "rollNo": "GCC-072",
+    "name": "MANU CHAKRAVARTHY S",
+    "dept": "Physical Education",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-073",
+    "rollNo": "GCC-073",
+    "name": "AJEESH P V",
+    "dept": "Physics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-074",
+    "rollNo": "GCC-074",
+    "name": "ARYA S",
+    "dept": "Physics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-075",
+    "rollNo": "GCC-075",
+    "name": "RAMABADRAN C D",
+    "dept": "Physics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-076",
+    "rollNo": "GCC-076",
+    "name": "VIJAYAKRISHNAN M V",
+    "dept": "Physics",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-077",
+    "rollNo": "GCC-077",
+    "name": "PRASANTH P V",
+    "dept": "Political Science",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-078",
+    "rollNo": "GCC-078",
+    "name": "NADIA MOIDEEN",
+    "dept": "Psychology",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-079",
+    "rollNo": "GCC-079",
+    "name": "SAJEESH C S",
+    "dept": "Sanskrit",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-080",
+    "rollNo": "GCC-080",
+    "name": "SREEJITH S",
+    "dept": "Statistics",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-081",
+    "rollNo": "GCC-081",
+    "name": "G KATHIRAVAN",
+    "dept": "Tamil",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-082",
+    "rollNo": "GCC-082",
+    "name": "K SIVAMANI",
+    "dept": "Tamil",
+    "year": "Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-083",
+    "rollNo": "GCC-083",
+    "name": "RATHI R",
+    "dept": "Tamil",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-084",
+    "rollNo": "GCC-084",
+    "name": "S FATHIMA",
+    "dept": "Tamil",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-085",
+    "rollNo": "GCC-085",
+    "name": "SALMA MAHAJABEEN T M",
+    "dept": "Tamil",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-086",
+    "rollNo": "GCC-086",
+    "name": "UMA MAKHESWARI K",
+    "dept": "Tamil",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-087",
+    "rollNo": "GCC-087",
+    "name": "V DHARMALINGAM",
+    "dept": "Tamil",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-088",
+    "rollNo": "GCC-088",
+    "name": "V RAVI",
+    "dept": "Tamil",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-089",
+    "rollNo": "GCC-089",
+    "name": "VIJAYAN A",
+    "dept": "Tamil",
+    "year": "Associate Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-090",
+    "rollNo": "GCC-090",
+    "name": "JAIN THOMAS",
+    "dept": "Zoology",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-091",
+    "rollNo": "GCC-091",
+    "name": "MUHAMMED SHAMEEM KOORMATH",
+    "dept": "Zoology",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-092",
+    "rollNo": "GCC-092",
+    "name": "SOLOMON C D",
+    "dept": "Zoology",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  },
+  {
+    "id": "TCH-093",
+    "rollNo": "GCC-093",
+    "name": "SURYA K S",
+    "dept": "Zoology",
+    "year": "Assistant Professor",
+    "status": "Eligible"
+  }
 ];
 
 const LOCAL_STORAGE_KEY = 'preferential_nominal_roll';
@@ -118,59 +819,33 @@ export class NominalRollService {
 
     const header = lines[0].split(',').map(h => h.trim().toLowerCase());
     const nameIdx = header.findIndex(h => h.includes('name'));
-    const rollIdx = header.findIndex(h => h.includes('roll') || h.includes('adm') || h.includes('id'));
     const deptIdx = header.findIndex(h => h.includes('dept') || h.includes('department'));
-    const yearIdx = header.findIndex(h => h.includes('year') || h.includes('sem') || h.includes('class'));
+    const rollIdx = header.findIndex(h => h.includes('roll') || h.includes('sl') || h.includes('id'));
+    const desigIdx = header.findIndex(h => h.includes('desig') || h.includes('year') || h.includes('rank'));
 
-    if (nameIdx === -1) throw new Error("CSV must contain a 'Name' column.");
+    if (nameIdx === -1) throw new Error("CSV must include a 'Name' column.");
 
-    const imported = [];
-    let idCounter = this.roll.length + 1001;
-
+    const newRoll = [];
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
       if (!line) continue;
       const cols = line.split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
-      const name = cols[nameIdx];
-      if (!name) continue;
+      const id = `TCH-${String(i).padStart(3, '0')}`;
+      const name = cols[nameIdx] || "Unnamed";
+      const dept = deptIdx !== -1 && cols[deptIdx] ? cols[deptIdx] : "General";
+      const rollNo = rollIdx !== -1 && cols[rollIdx] ? cols[rollIdx] : `GCC-${String(i).padStart(3, '0')}`;
+      const year = desigIdx !== -1 && cols[desigIdx] ? cols[desigIdx] : "Faculty";
 
-      const rollNo = rollIdx !== -1 && cols[rollIdx] ? cols[rollIdx] : `ROLL-${i}`;
-      const dept = deptIdx !== -1 && cols[deptIdx] ? cols[deptIdx] : 'General';
-      const year = yearIdx !== -1 && cols[yearIdx] ? cols[yearIdx] : 'Undergraduate';
-
-      imported.push({
-        id: `VOT-${idCounter++}`,
-        rollNo,
-        name,
-        dept,
-        year,
-        status: 'Eligible'
-      });
+      newRoll.push({ id, rollNo, name, dept, year, status: "Eligible" });
     }
 
-    if (imported.length === 0) throw new Error("No valid records found to import.");
-
-    this.roll = imported;
+    this.roll = newRoll;
     this.save();
     return this.roll.length;
   }
 
-  resetToDefault() {
+  resetDefault() {
     this.roll = [...INITIAL_NOMINAL_ROLL];
     this.save();
-    return this.roll.length;
-  }
-
-  toCSV() {
-    const headers = ['Voter ID', 'Roll / Adm No', 'Full Name', 'Department', 'Semester / Year', 'Status'];
-    const rows = this.roll.map(v => [
-      v.id,
-      `"${v.rollNo}"`,
-      `"${v.name}"`,
-      `"${v.dept}"`,
-      `"${v.year}"`,
-      v.status
-    ].join(','));
-    return [headers.join(','), ...rows].join('\n');
   }
 }

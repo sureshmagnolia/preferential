@@ -25,23 +25,22 @@ const SLATE_COLORS = [
 // Presets using Academic & Institutional Departments
 const PRESETS = {
   faculty_senate: {
-    name: "University Senate (3 Vacancies · 5 Candidates · 100 Ballots)",
+    name: "Govt College Chittur — Staff Council (3 Seats · 5 Candidates · 93 Ballots)",
     seats: 3,
     quotaType: "droop",
     candidates: [
-      { id: "c1", name: "Dr. Eleanor Vance", dept: "Computer Science", color: SLATE_COLORS[0] },
-      { id: "c2", name: "Prof. Robert Martinez", dept: "Physics", color: SLATE_COLORS[1] },
-      { id: "c3", name: "Dr. Charlotte Hayes", dept: "Economics", color: SLATE_COLORS[2] },
-      { id: "c4", name: "Prof. Diana Chen", dept: "Medicine", color: SLATE_COLORS[3] },
-      { id: "c5", name: "Dr. Evan Wright", dept: "Mechanical Eng.", color: SLATE_COLORS[4] },
+      { id: "c1", name: "AJITHA R", dept: "Economics", color: SLATE_COLORS[0] },
+      { id: "c2", name: "BREJESH N S", dept: "Economics", color: SLATE_COLORS[1] },
+      { id: "c3", name: "MANU CHAKRAVARTHY S", dept: "Physical Education", color: SLATE_COLORS[2] },
+      { id: "c4", name: "NAGARAJ S", dept: "Economics", color: SLATE_COLORS[3] },
+      { id: "c5", name: "SOLOMON C D", dept: "Zoology", color: SLATE_COLORS[4] },
     ],
     ballotEntries: [
-      { serial: "BAL-0001..0024", count: 24, prefs: ["Dr. Eleanor Vance", "Prof. Robert Martinez", "Prof. Diana Chen"] },
-      { serial: "BAL-0025..0036", count: 12, prefs: ["Dr. Eleanor Vance", "Prof. Diana Chen", "Prof. Robert Martinez"] },
-      { serial: "BAL-0037..0056", count: 20, prefs: ["Prof. Robert Martinez", "Dr. Eleanor Vance", "Prof. Diana Chen"] },
-      { serial: "BAL-0057..0074", count: 18, prefs: ["Dr. Charlotte Hayes", "Dr. Evan Wright", "Prof. Diana Chen"] },
-      { serial: "BAL-0075..0090", count: 16, prefs: ["Prof. Diana Chen", "Prof. Robert Martinez", "Dr. Charlotte Hayes"] },
-      { serial: "BAL-0091..0100", count: 10, prefs: ["Dr. Evan Wright", "Prof. Diana Chen", "Dr. Charlotte Hayes"] },
+      { serial: "BAL-0001..0026", count: 26, prefs: ["AJITHA R", "BREJESH N S", "NAGARAJ S"] },
+      { serial: "BAL-0027..0048", count: 22, prefs: ["BREJESH N S", "AJITHA R", "NAGARAJ S"] },
+      { serial: "BAL-0049..0066", count: 18, prefs: ["MANU CHAKRAVARTHY S", "SOLOMON C D"] },
+      { serial: "BAL-0067..0081", count: 15, prefs: ["NAGARAJ S", "BREJESH N S"] },
+      { serial: "BAL-0082..0093", count: 12, prefs: ["SOLOMON C D"] },
     ]
   },
   dept_council: {
@@ -95,7 +94,7 @@ class STVApp {
     this.compiledBallots = [];
 
     // Next auto serial number counter
-    this.serialCounter = 101;
+    this.serialCounter = 94;
 
     // Simulation state
     this.electionResult = null;
