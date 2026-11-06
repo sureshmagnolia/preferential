@@ -2461,3 +2461,34 @@ body {
   }
 }
 
+
+/* Duplicate preference alerts and styling under Statute 51(1)(h) */
+.rank-duplicate-alert {
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.825rem;
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.4;
+}
+
+.rank-duplicate-alert.alert-red {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+}
+
+.rank-duplicate-alert.alert-amber {
+  background: rgba(245, 158, 11, 0.15);
+  border: 1px solid rgba(245, 158, 11, 0.5);
+  color: #fde68a;
+}
+
+.rank-box-input.has-subsequent-duplicate {
+  border-color: #f59e0b !important;
+  background: rgba(245, 158, 11, 0.18) !important;
+  color: #fde68a !important;
+  box-shadow: 0 0 8px rgba(245, 158, 11, 0.4) !important;
+}

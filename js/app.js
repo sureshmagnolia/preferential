@@ -1033,7 +1033,7 @@ class STVApp {
     const rankMap = new Map();
 
     inputs.forEach(inp => {
-      inp.classList.remove('has-duplicate');
+      inp.classList.remove('has-duplicate', 'has-subsequent-duplicate');
       const val = inp.value.trim();
       if (val) {
         const rank = parseInt(val, 10);
@@ -1044,50 +1044,88 @@ class STVApp {
       }
     });
 
-    let hasDuplicate = false;
+    const rank1List = rankMap.get(1) || [];
+    const hasRank1Duplicate = rank1List.length > 1;
+
+    let hasSubsequentDuplicate = false;
+    let firstDupRank = null;
     rankMap.forEach((list, rank) => {
-      if (list.length > 1) {
-        hasDuplicate = true;
-        this.duplicateRankNumber.textContent = rank;
-        list.forEach(i => i.classList.add('has-duplicate'));
+      if (rank > 1 && list.length > 1) {
+        hasSubsequentDuplicate = true;
+        if (!firstDupRank || rank < firstDupRank) firstDupRank = rank;
+        list.forEach(i => i.classList.add('has-subsequent-duplicate'));
       }
     });
 
-    this.duplicateRankAlert.style.display = hasDuplicate ? 'flex' : 'none';
-    return !hasDuplicate;
+    if (hasRank1Duplicate) {
+      rank1List.forEach(i => i.classList.add('has-duplicate'));
+      this.duplicateRankAlert.className = 'rank-duplicate-alert alert-red';
+      this.duplicateRankAlert.style.display = 'flex';
+      const msgSpan = this.duplicateRankAlert.querySelector('span') || this.duplicateRankAlert;
+      msgSpan.innerHTML = `<strong>Fatal Invalidation (Statute 53(2)(v)):</strong> Figure '1' is marked for more than one candidate. Under statutory rules, this ballot paper is void and rejected.`;
+      return false; // Blocks submission
+    } else if (hasSubsequentDuplicate) {
+      this.duplicateRankAlert.className = 'rank-duplicate-alert alert-amber';
+      this.duplicateRankAlert.style.display = 'flex';
+      const msgSpan = this.duplicateRankAlert.querySelector('span') || this.duplicateRankAlert;
+      msgSpan.innerHTML = `<strong>Statutory Rule (Statute 51(1)(h)):</strong> Duplicate detected at preference <strong>${firstDupRank}</strong>. This ballot is <strong>valid for Preference 1</strong> (and earlier unique ranks), and will be treated as <strong>Exhausted</strong> when preference ${firstDupRank} is reached.`;
+      return true; // Allowed to be logged!
+    } else {
+      this.duplicateRankAlert.style.display = 'none';
+      return true;
+    }
   }
 
   recordBallotFromPaper() {
-    if (!this.validateDuplicateRanks()) {
-      this.showToast("Cannot log ballot: duplicate preference numbers detected.", "warning");
+    const isValid = this.validateDuplicateRanks();
+    if (!isValid) {
+      this.showToast("Cannot log ballot: Figure '1' is marked for multiple candidates (Statute 53(2)(v)).", "error");
       return;
     }
 
     const inputs = Array.from(this.ballotCandidateInputs.querySelectorAll('.rank-box-input'));
-    const marked = [];
+    const rankMap = new Map();
 
     inputs.forEach(inp => {
       const val = inp.value.trim();
       if (val) {
         const rank = parseInt(val, 10);
         if (!isNaN(rank)) {
-          marked.push({ name: inp.dataset.candidate, rank });
+          if (!rankMap.has(rank)) rankMap.set(rank, []);
+          rankMap.get(rank).push(inp);
         }
       }
     });
 
-    if (marked.length === 0) {
-      this.showToast("Mark at least one preference before logging ballot.", "warning");
+    // Check if figure 1 was marked
+    if (!rankMap.has(1) || rankMap.get(1).length === 0) {
+      this.showToast("Cannot log ballot: Figure '1' must be marked for at least one candidate (Statute 53(2)(iv)).", "warning");
       return;
     }
 
-    marked.sort((a, b) => a.rank - b.rank);
-    const prefs = marked.map(m => m.name);
+    // Build valid consecutive preference chain starting from rank 1
+    // Under Statute 51(1)(h): A ballot exhausts when a duplicate rank or broken sequence is encountered
+    const validPrefs = [];
+    let expectedRank = 1;
+    let exhaustedDueToDuplicate = false;
+    let duplicateRankNum = null;
+
+    while (rankMap.has(expectedRank)) {
+      const list = rankMap.get(expectedRank);
+      if (list.length === 1) {
+        validPrefs.push(list[0].dataset.candidate);
+        expectedRank++;
+      } else {
+        exhaustedDueToDuplicate = true;
+        duplicateRankNum = expectedRank;
+        break; // Duplicate preference stops further transfer (Statute 51(1)(h)(i))
+      }
+    }
 
     const serial = this.inputBallotSerial.value.trim() || `BAL-${String(this.serialCounter).padStart(4, '0')}`;
     const count = parseInt(this.inputBallotCount.value, 10) || 1;
 
-    this.ballotEntries.push({ serial, count, prefs });
+    this.ballotEntries.push({ serial, count, prefs: validPrefs });
     this.serialCounter++;
     this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
     this.inputBallotCount.value = 1;
@@ -1095,12 +1133,19 @@ class STVApp {
     // Clear inputs
     inputs.forEach(inp => {
       inp.value = '';
+      inp.classList.remove('has-duplicate', 'has-subsequent-duplicate');
       inp.closest('.ballot-paper-row').classList.remove('marked');
     });
 
+    this.duplicateRankAlert.style.display = 'none';
     this.renderBallotTable();
     this.syncRawTextarea();
-    this.showToast(`Logged ${count} ballot(s) as ${serial}.`, "success");
+
+    if (exhaustedDueToDuplicate) {
+      this.showToast(`Logged ${count} ballot(s) as ${serial}. (Valid up to Pref ${validPrefs.length}; exhausts at Pref ${duplicateRankNum} under Statute 51(1)(h)).`, "info");
+    } else {
+      this.showToast(`Logged ${count} ballot(s) as ${serial}.`, "success");
+    }
   }
 
   renderBallotTable() {
