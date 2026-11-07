@@ -1013,7 +1013,7 @@ class STVApp {
   loadFromLocalStorage() {
     try {
       const raw = localStorage.getItem('stv_ballot_registry_v1');
-      if (!raw) return false;
+      if (!raw || raw === 'undefined' || raw === 'null' || raw.trim() === '') return false;
 
       const payload = JSON.parse(raw);
       if (!payload || !Array.isArray(payload.ballotEntries)) return false;
@@ -1052,7 +1052,11 @@ class STVApp {
       if (this.ballotEntries.length > 0) {
         this.calculateAndTally(false);
       } else {
-        this.resetSimulation();
+        try {
+          this.resetSimulation();
+        } catch (e) {
+          console.warn("resetSimulation error during load:", e);
+        }
       }
 
       return true;
@@ -1642,8 +1646,12 @@ class STVApp {
     this.compiledBallots = [];
     this.renderBallotTable();
     this.syncRawTextarea();
-    this.resetSimulation();
     this.saveToLocalStorage();
+    try {
+      this.resetSimulation();
+    } catch (e) {
+      console.warn("resetSimulation error during clear:", e);
+    }
     this.showToast("Ballot box cleared to 0 ballots.", "info");
   }
 
@@ -1780,13 +1788,27 @@ class STVApp {
 
   render() {
     if (!this.electionResult) {
-      this.kpiTotalVotes.textContent = '0.00';
-      this.kpiTotalBallots.textContent = '0 verified ballots logged';
-      this.kpiQuota.textContent = '—';
-      this.kpiSeatsStatus.textContent = `0 / ${this.seats} Filled`;
-      this.kpiSeatsSubtext.textContent = `${this.seats} vacancies remaining`;
-      this.roundIndicator.textContent = 'Awaiting Ballots';
-      this.simulationStepNarrative.innerHTML = '<p class="text-secondary" style="font-style: italic;">No ballots logged in the box. Enter ballots in the Electoral Setup & Digital Ballot Entry tab, or click "Load Sample Data" to run a demo simulation.</p>';
+      if (this.kpiTotalVotes) this.kpiTotalVotes.textContent = '0.00';
+      if (this.kpiTotalBallots) this.kpiTotalBallots.textContent = '0 verified ballots logged';
+      if (this.kpiQuota) this.kpiQuota.textContent = '—';
+      if (this.kpiSeatsStatus) this.kpiSeatsStatus.textContent = `0 / ${this.seats} Filled`;
+      if (this.kpiSeatsSubtext) this.kpiSeatsSubtext.textContent = `${this.seats} vacancies remaining`;
+      if (this.roundIndicator) this.roundIndicator.textContent = 'Awaiting Ballots';
+      if (this.demoCommentaryBox) {
+        this.demoCommentaryBox.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-style: italic;">No ballots logged in the box. Enter ballots in the Electoral Setup & Digital Ballot Entry tab, or click "Load Sample Data" to run a demo simulation.</div>';
+      }
+      if (this.candidatesContainer) {
+        this.candidatesContainer.innerHTML = '<div style="grid-column: 1 / -1; padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">Ballot box is empty. No live candidate vote tallies to display.</div>';
+      }
+      if (this.auditRoundChip) this.auditRoundChip.textContent = 'Count Not Started';
+      if (this.auditActionTitle) this.auditActionTitle.textContent = 'Awaiting Ballots';
+      if (this.auditActionDesc) this.auditActionDesc.textContent = 'Please log ballots in the Electoral Setup tab, then click "Calculate & Tally Election".';
+      if (this.btnPrev) this.btnPrev.disabled = true;
+      if (this.btnFirst) this.btnFirst.disabled = true;
+      if (this.btnNext) this.btnNext.disabled = true;
+      if (this.btnLast) this.btnLast.disabled = true;
+      if (this.btnPrevSubstep) this.btnPrevSubstep.disabled = true;
+      if (this.btnNextSubstep) this.btnNextSubstep.disabled = true;
       return;
     }
 

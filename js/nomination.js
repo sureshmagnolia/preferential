@@ -113,7 +113,7 @@ export class NominationService {
   load() {
     try {
       const stored = localStorage.getItem(STORAGE_NOMINATIONS_KEY);
-      if (stored) {
+      if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           // If stored data contains old mock names like Charlotte or Eleanor, invalidate and use GCC candidates

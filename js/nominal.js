@@ -762,7 +762,7 @@ export class NominalRollService {
   load() {
     try {
       const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (stored) {
+      if (stored && stored !== 'undefined' && stored !== 'null' && stored.trim() !== '') {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
           const hasOldMock = parsed.some(p => (p.rollNo && p.rollNo.startsWith('24-')) || (p.id && p.id.startsWith('VOT-')));
