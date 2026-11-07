@@ -661,8 +661,14 @@
                 <div style="display: flex; gap: 0.75rem; align-items: center;">
                   <div class="card-icon-tag">4</div>
                   <div>
-                    <h3>Serialized Ballot Box Registry</h3>
-                    <p class="config-card-sub">Audit trail of verified paper ballots deposited in the box.</p>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                      <h3 style="margin: 0;">Serialized Ballot Box Registry</h3>
+                      <span id="storage-status-pill" style="font-size: 0.72rem; color: #10b981; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        Saved in Browser
+                      </span>
+                    </div>
+                    <p class="config-card-sub" style="margin-top: 0.2rem;">Audit trail of verified paper ballots deposited in the box (persisted in local browser storage).</p>
                   </div>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">

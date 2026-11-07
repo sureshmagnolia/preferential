@@ -112,7 +112,12 @@ class STVApp {
     this.updateAuthUi();
     this.initNominalRollUi();
     this.initNominationUi();
-    this.loadPreset('faculty_senate');
+
+    // Check if ballot registry was previously saved in browser localStorage
+    const hasSavedState = this.loadFromLocalStorage();
+    if (!hasSavedState) {
+      this.loadPreset('faculty_senate');
+    }
   }
 
   cacheDom() {
@@ -392,6 +397,7 @@ class STVApp {
     this.inputQuotaType.addEventListener('change', (e) => {
       this.quotaType = e.target.value;
       this.selectPreset.value = 'custom';
+      this.saveToLocalStorage();
     });
 
     // Setup: Candidates
@@ -905,7 +911,7 @@ class STVApp {
       prefs: [...b.prefs]
     }));
 
-    this.serialCounter = 101;
+    this.serialCounter = this.ballotEntries.length + 1;
     this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
 
     this.renderCandidateRoster();
@@ -914,6 +920,7 @@ class STVApp {
     this.syncRawTextarea();
 
     this.calculateAndTally(false);
+    this.saveToLocalStorage();
   }
 
   adjustSeats(delta) {
@@ -922,6 +929,7 @@ class STVApp {
       this.seats = next;
       this.inputSeats.value = this.seats;
       this.selectPreset.value = 'custom';
+      this.saveToLocalStorage();
     }
   }
 
@@ -948,6 +956,7 @@ class STVApp {
 
     this.renderCandidateRoster();
     this.renderBallotPaperRows();
+    this.saveToLocalStorage();
     this.showToast(`Candidate '${name}' added to roster.`, "info");
   }
 
@@ -975,7 +984,82 @@ class STVApp {
     this.renderBallotPaperRows();
     this.renderBallotTable();
     this.syncRawTextarea();
+    this.saveToLocalStorage();
     this.showToast(`Candidate '${removedName}' removed.`, "info");
+  }
+
+  // =========================================================================
+  // LOCAL STORAGE PERSISTENCE (BALLOTS & ELECTION STATE)
+  // =========================================================================
+
+  saveToLocalStorage() {
+    try {
+      const payload = {
+        version: 1,
+        currentPresetKey: this.currentPresetKey,
+        seats: this.seats,
+        quotaType: this.quotaType,
+        serialCounter: this.serialCounter,
+        candidates: this.candidates,
+        ballotEntries: this.ballotEntries,
+        updatedAt: new Date().toISOString()
+      };
+      localStorage.setItem('stv_ballot_registry_v1', JSON.stringify(payload));
+    } catch (err) {
+      console.warn("Could not save ballot registry to localStorage:", err);
+    }
+  }
+
+  loadFromLocalStorage() {
+    try {
+      const raw = localStorage.getItem('stv_ballot_registry_v1');
+      if (!raw) return false;
+
+      const payload = JSON.parse(raw);
+      if (!payload || !Array.isArray(payload.ballotEntries)) return false;
+
+      // Restore configuration
+      if (Array.isArray(payload.candidates) && payload.candidates.length >= 2) {
+        this.candidates = payload.candidates;
+      } else {
+        const defaultPreset = PRESETS['faculty_senate'];
+        this.candidates = defaultPreset.candidates.map(c => ({ ...c }));
+      }
+
+      this.seats = parseInt(payload.seats, 10) || 3;
+      this.quotaType = payload.quotaType || 'droop';
+      this.currentPresetKey = payload.currentPresetKey || 'custom';
+      this.serialCounter = parseInt(payload.serialCounter, 10) || (payload.ballotEntries.length + 1);
+
+      this.ballotEntries = payload.ballotEntries.map(b => ({
+        serial: b.serial,
+        count: b.count,
+        prefs: Array.isArray(b.prefs) ? [...b.prefs] : []
+      }));
+
+      // Update Form Controls
+      if (this.selectPreset) this.selectPreset.value = this.currentPresetKey;
+      if (this.inputSeats) this.inputSeats.value = this.seats;
+      if (this.inputQuotaType) this.inputQuotaType.value = this.quotaType;
+      if (this.inputBallotSerial) this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
+
+      // Render components
+      this.renderCandidateRoster();
+      this.renderBallotPaperRows();
+      this.renderBallotTable();
+      this.syncRawTextarea();
+
+      if (this.ballotEntries.length > 0) {
+        this.calculateAndTally(false);
+      } else {
+        this.resetSimulation();
+      }
+
+      return true;
+    } catch (err) {
+      console.warn("Could not load ballot registry from localStorage:", err);
+      return false;
+    }
   }
 
   renderCandidateRoster() {
@@ -1038,6 +1122,7 @@ class STVApp {
     this.renderBallotPaperRows();
     this.renderBallotTable();
     this.syncRawTextarea();
+    this.saveToLocalStorage();
     this.showToast(`Candidate updated to '${newName}'.`, "info");
   }
 
@@ -1184,6 +1269,7 @@ class STVApp {
     this.duplicateRankAlert.style.display = 'none';
     this.renderBallotTable();
     this.syncRawTextarea();
+    this.saveToLocalStorage();
 
     if (exhaustedDueToDuplicate) {
       this.showToast(`Logged ${count} ballot(s) as ${serial}. (Valid up to Pref ${validPrefs.length}; exhausts at Pref ${duplicateRankNum} under Statute 51(1)(h)).`, "info");
@@ -1225,6 +1311,7 @@ class STVApp {
           this.ballotEntries.splice(idx, 1);
           this.renderBallotTable();
           this.syncRawTextarea();
+          this.saveToLocalStorage();
           this.showToast(`Ballot ${entry.serial} deleted.`, "info");
         }
       });
@@ -1399,6 +1486,7 @@ class STVApp {
     this.renderBallotTable();
     this.syncRawTextarea();
     this.closeModal(this.modalEditBallot);
+    this.saveToLocalStorage();
 
     if (exhaustedDueToDuplicate) {
       this.showToast(`Updated ${serial}. (Valid up to Pref ${validPrefs.length}; exhausts at Pref ${duplicateRankNum} under Statute 51(1)(h)).`, "info");
@@ -1417,6 +1505,7 @@ class STVApp {
       this.renderBallotTable();
       this.syncRawTextarea();
       this.closeModal(this.modalEditBallot);
+      this.saveToLocalStorage();
       this.showToast(`Ballot ${serial} deleted.`, "info");
     }
   }
@@ -1519,7 +1608,10 @@ class STVApp {
 
     if (parsed.length > 0) {
       this.ballotEntries = parsed;
+      this.serialCounter = parsed.length + 1;
+      this.inputBallotSerial.value = `BAL-${String(this.serialCounter).padStart(4, '0')}`;
       this.renderBallotTable();
+      this.saveToLocalStorage();
       this.showToast(`Applied ${parsed.length} raw ballot groups.`, "info");
     }
   }
@@ -1546,9 +1638,12 @@ class STVApp {
     this.ballotEntries = [];
     this.serialCounter = 1;
     this.inputBallotSerial.value = `BAL-0001`;
+    this.electionResult = null;
+    this.compiledBallots = [];
     this.renderBallotTable();
     this.syncRawTextarea();
     this.resetSimulation();
+    this.saveToLocalStorage();
     this.showToast("Ballot box cleared to 0 ballots.", "info");
   }
 
@@ -1684,7 +1779,16 @@ class STVApp {
   }
 
   render() {
-    if (!this.electionResult) return;
+    if (!this.electionResult) {
+      this.kpiTotalVotes.textContent = '0.00';
+      this.kpiTotalBallots.textContent = '0 verified ballots logged';
+      this.kpiQuota.textContent = '—';
+      this.kpiSeatsStatus.textContent = `0 / ${this.seats} Filled`;
+      this.kpiSeatsSubtext.textContent = `${this.seats} vacancies remaining`;
+      this.roundIndicator.textContent = 'Awaiting Ballots';
+      this.simulationStepNarrative.innerHTML = '<p class="text-secondary" style="font-style: italic;">No ballots logged in the box. Enter ballots in the Electoral Setup & Digital Ballot Entry tab, or click "Load Sample Data" to run a demo simulation.</p>';
+      return;
+    }
 
     const round = this.electionResult.rounds[this.currentRoundIdx];
     const totalRounds = this.electionResult.rounds.length;
