@@ -275,8 +275,36 @@ class STVApp {
 
     // Action buttons
     this.btnClearAllBallots = document.getElementById('btn-clear-all-ballots');
+    this.btnClearTableBallots = document.getElementById('btn-clear-table-ballots');
     this.btnLoadSample = document.getElementById('btn-load-sample');
     this.btnRunCustom = document.getElementById('btn-run-custom-election');
+
+    // Edit Ballot Modal Elements
+    this.modalEditBallot = document.getElementById('modal-edit-ballot');
+    this.editBallotIndex = document.getElementById('edit-ballot-index');
+    this.editBallotSerial = document.getElementById('edit-ballot-serial');
+    this.editBallotCount = document.getElementById('edit-ballot-count');
+    this.editBallotInputs = document.getElementById('edit-ballot-candidate-inputs');
+    this.editDuplicateAlert = document.getElementById('edit-duplicate-rank-alert');
+    this.editDuplicateMsg = document.getElementById('edit-duplicate-rank-msg');
+    this.btnSaveEditBallot = document.getElementById('btn-save-edit-ballot');
+    this.btnCancelEditBallot = document.getElementById('btn-cancel-edit-ballot');
+    this.btnCloseEditBallotModal = document.getElementById('btn-close-edit-ballot-modal');
+    this.btnDeleteFromEditModal = document.getElementById('btn-delete-from-edit-modal');
+
+    // Double Confirmation Clear Ballots Modal Elements
+    this.modalConfirmClear = document.getElementById('modal-confirm-clear-ballots');
+    this.clearStep1 = document.getElementById('clear-ballots-step1');
+    this.clearStep2 = document.getElementById('clear-ballots-step2');
+    this.clearModalBallotCount = document.getElementById('clear-modal-ballot-count');
+    this.clearModalVoteCount = document.getElementById('clear-modal-vote-count');
+    this.inputClearConfirmWord = document.getElementById('input-clear-confirm-word');
+    this.btnProceedClearStep2 = document.getElementById('btn-proceed-clear-step2');
+    this.btnCancelClear1 = document.getElementById('btn-cancel-clear-1');
+    this.btnCloseClear1 = document.getElementById('btn-close-clear-modal-1');
+    this.btnBackClearStep1 = document.getElementById('btn-back-to-clear-step1');
+    this.btnCloseClear2 = document.getElementById('btn-close-clear-modal-2');
+    this.btnExecuteClear = document.getElementById('btn-execute-clear-ballots');
 
     this.appToast = document.getElementById('app-toast');
   }
@@ -374,9 +402,25 @@ class STVApp {
 
     // Setup: Ballot Entry
     this.btnRecordBallot.addEventListener('click', () => this.recordBallotFromPaper());
-    this.btnClearAllBallots.addEventListener('click', () => this.clearAllBallots());
+    this.btnClearAllBallots.addEventListener('click', () => this.openClearBallotsDialog());
+    this.btnClearTableBallots?.addEventListener('click', () => this.openClearBallotsDialog());
     this.btnLoadSample.addEventListener('click', () => this.loadPreset('faculty_senate'));
     this.btnRunCustom.addEventListener('click', () => this.calculateAndTally(true));
+
+    // Edit Ballot Modal Events
+    this.btnSaveEditBallot.addEventListener('click', () => this.saveBallotEdit());
+    this.btnCancelEditBallot.addEventListener('click', () => this.closeModal(this.modalEditBallot));
+    this.btnCloseEditBallotModal.addEventListener('click', () => this.closeModal(this.modalEditBallot));
+    this.btnDeleteFromEditModal.addEventListener('click', () => this.deleteBallotFromEditModal());
+
+    // Double Confirmation Clear Modal Events
+    this.btnCancelClear1.addEventListener('click', () => this.closeModal(this.modalConfirmClear));
+    this.btnCloseClear1.addEventListener('click', () => this.closeModal(this.modalConfirmClear));
+    this.btnProceedClearStep2.addEventListener('click', () => this.proceedToClearStep2());
+    this.btnBackClearStep1.addEventListener('click', () => this.backToClearStep1());
+    this.btnCloseClear2.addEventListener('click', () => this.closeModal(this.modalConfirmClear));
+    this.inputClearConfirmWord.addEventListener('input', () => this.handleClearConfirmInput());
+    this.btnExecuteClear.addEventListener('click', () => this.executeClearAllBallots());
 
     // Setup: Raw
     this.btnToggleRaw.addEventListener('click', () => {
@@ -1163,21 +1207,278 @@ class STVApp {
             ${entry.prefs.map((p, pIdx) => `<span class="pref-badge">${pIdx + 1}. ${p}</span>`).join('')}
           </div>
         </td>
-        <td style="text-align: right;">
-          <button type="button" class="btn btn-ghost btn-sm btn-delete-ballot" title="Delete ballot entry" style="padding: 0.2rem 0.5rem; color: #f87171;">✕</button>
+        <td style="text-align: right; white-space: nowrap;">
+          <button type="button" class="btn btn-ghost btn-sm btn-edit-ballot" title="Edit ballot entry" style="padding: 0.2rem 0.55rem; color: #60a5fa; font-weight: 500;">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="vertical-align: -2px; margin-right: 2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            Edit
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm btn-delete-ballot" title="Delete ballot entry" style="padding: 0.2rem 0.55rem; color: #f87171;">✕</button>
         </td>
       `;
 
+      tr.querySelector('.btn-edit-ballot').addEventListener('click', () => {
+        this.openEditBallotModal(idx);
+      });
+
       tr.querySelector('.btn-delete-ballot').addEventListener('click', () => {
-        this.ballotEntries.splice(idx, 1);
-        this.renderBallotTable();
-        this.syncRawTextarea();
+        if (confirm(`Delete ballot entry ${entry.serial}?`)) {
+          this.ballotEntries.splice(idx, 1);
+          this.renderBallotTable();
+          this.syncRawTextarea();
+          this.showToast(`Ballot ${entry.serial} deleted.`, "info");
+        }
       });
 
       this.ballotTableBody.appendChild(tr);
     });
 
     this.ballotBoxTotalPill.textContent = `${totalBallots} Total Ballots`;
+  }
+
+  // =========================================================================
+  // EDIT BALLOT MODAL LOGIC
+  // =========================================================================
+
+  openEditBallotModal(idx) {
+    if (idx < 0 || idx >= this.ballotEntries.length) return;
+    const entry = this.ballotEntries[idx];
+
+    this.editBallotIndex.value = idx;
+    this.editBallotSerial.value = entry.serial;
+    this.editBallotCount.value = entry.count || 1;
+    document.getElementById('modal-edit-ballot-title').textContent = `Edit Ballot: ${entry.serial}`;
+
+    // Render candidate inputs
+    this.editBallotInputs.innerHTML = '';
+    this.candidates.forEach((cand, cIdx) => {
+      const row = document.createElement('div');
+      row.className = 'ballot-paper-row';
+      row.style.marginBottom = '0.4rem';
+
+      // Find current rank of this candidate in entry.prefs (if any)
+      const rankIdx = entry.prefs.indexOf(cand.name);
+      const currentRank = rankIdx !== -1 ? rankIdx + 1 : '';
+
+      if (currentRank) row.classList.add('marked');
+
+      row.innerHTML = `
+        <div class="ballot-candidate-info">
+          <span class="ballot-cand-order-num">${cIdx + 1}</span>
+          <div class="roster-avatar" style="background: ${cand.color}; width: 28px; height: 28px; font-size: 0.75rem;">
+            ${cand.name.charAt(0)}
+          </div>
+          <div>
+            <div class="ballot-cand-name" style="font-size: 0.9rem;">${cand.name}</div>
+            <div class="ballot-cand-dept" style="font-size: 0.75rem;">${cand.dept}</div>
+          </div>
+        </div>
+        <div class="ballot-rank-input-wrap">
+          <input type="number" class="rank-box-input edit-rank-box-input" min="1" max="${this.candidates.length}" placeholder="—" data-candidate="${cand.name}" value="${currentRank}">
+        </div>
+      `;
+
+      const input = row.querySelector('.edit-rank-box-input');
+      input.addEventListener('input', () => {
+        row.classList.toggle('marked', Boolean(input.value.trim()));
+        this.validateEditDuplicateRanks();
+      });
+
+      this.editBallotInputs.appendChild(row);
+    });
+
+    this.validateEditDuplicateRanks();
+    this.openModal(this.modalEditBallot);
+  }
+
+  validateEditDuplicateRanks() {
+    const inputs = Array.from(this.editBallotInputs.querySelectorAll('.edit-rank-box-input'));
+    const rankMap = new Map();
+
+    inputs.forEach(inp => {
+      inp.classList.remove('has-duplicate', 'has-subsequent-duplicate');
+      const val = inp.value.trim();
+      if (val) {
+        const rank = parseInt(val, 10);
+        if (!isNaN(rank)) {
+          if (!rankMap.has(rank)) rankMap.set(rank, []);
+          rankMap.get(rank).push(inp);
+        }
+      }
+    });
+
+    const rank1List = rankMap.get(1) || [];
+    const hasRank1Duplicate = rank1List.length > 1;
+
+    let hasSubsequentDuplicate = false;
+    let firstDupRank = null;
+    rankMap.forEach((list, rank) => {
+      if (rank > 1 && list.length > 1) {
+        hasSubsequentDuplicate = true;
+        if (!firstDupRank || rank < firstDupRank) firstDupRank = rank;
+        list.forEach(i => i.classList.add('has-subsequent-duplicate'));
+      }
+    });
+
+    if (hasRank1Duplicate) {
+      rank1List.forEach(i => i.classList.add('has-duplicate'));
+      this.editDuplicateAlert.className = 'rank-duplicate-alert alert-red';
+      this.editDuplicateAlert.style.display = 'flex';
+      this.editDuplicateMsg.innerHTML = `<strong>Fatal Invalidation (Statute 53(2)(v)):</strong> Figure '1' is marked for more than one candidate. This ballot cannot be saved as valid.`;
+      this.btnSaveEditBallot.disabled = true;
+      this.btnSaveEditBallot.style.opacity = '0.5';
+      this.btnSaveEditBallot.style.cursor = 'not-allowed';
+      return false;
+    } else if (hasSubsequentDuplicate) {
+      this.editDuplicateAlert.className = 'rank-duplicate-alert alert-amber';
+      this.editDuplicateAlert.style.display = 'flex';
+      this.editDuplicateMsg.innerHTML = `<strong>Statutory Rule (Statute 51(1)(h)):</strong> Duplicate detected at preference <strong>${firstDupRank}</strong>. Ballot is valid for Preference 1 (and earlier unique ranks), and exhausts at preference ${firstDupRank}.`;
+      this.btnSaveEditBallot.disabled = false;
+      this.btnSaveEditBallot.style.opacity = '1';
+      this.btnSaveEditBallot.style.cursor = 'pointer';
+      return true;
+    } else {
+      this.editDuplicateAlert.style.display = 'none';
+      this.btnSaveEditBallot.disabled = false;
+      this.btnSaveEditBallot.style.opacity = '1';
+      this.btnSaveEditBallot.style.cursor = 'pointer';
+      return true;
+    }
+  }
+
+  saveBallotEdit() {
+    const isValid = this.validateEditDuplicateRanks();
+    if (!isValid) {
+      this.showToast("Cannot save: Figure '1' is marked for multiple candidates (Statute 53(2)(v)).", "error");
+      return;
+    }
+
+    const idx = parseInt(this.editBallotIndex.value, 10);
+    if (isNaN(idx) || idx < 0 || idx >= this.ballotEntries.length) return;
+
+    const serial = this.editBallotSerial.value.trim() || `BAL-${String(idx + 1).padStart(4, '0')}`;
+    const count = parseInt(this.editBallotCount.value, 10) || 1;
+
+    const inputs = Array.from(this.editBallotInputs.querySelectorAll('.edit-rank-box-input'));
+    const rankMap = new Map();
+
+    inputs.forEach(inp => {
+      const val = inp.value.trim();
+      if (val) {
+        const rank = parseInt(val, 10);
+        if (!isNaN(rank)) {
+          if (!rankMap.has(rank)) rankMap.set(rank, []);
+          rankMap.get(rank).push(inp);
+        }
+      }
+    });
+
+    if (!rankMap.has(1) || rankMap.get(1).length === 0) {
+      this.showToast("Figure '1' must be marked for at least one candidate (Statute 53(2)(iv)).", "warning");
+      return;
+    }
+
+    // Build valid preference chain starting from rank 1 (Statute 51(1)(h))
+    const validPrefs = [];
+    let expectedRank = 1;
+    let exhaustedDueToDuplicate = false;
+    let duplicateRankNum = null;
+
+    while (rankMap.has(expectedRank)) {
+      const list = rankMap.get(expectedRank);
+      if (list.length === 1) {
+        validPrefs.push(list[0].dataset.candidate);
+        expectedRank++;
+      } else {
+        exhaustedDueToDuplicate = true;
+        duplicateRankNum = expectedRank;
+        break;
+      }
+    }
+
+    this.ballotEntries[idx] = { serial, count, prefs: validPrefs };
+    this.renderBallotTable();
+    this.syncRawTextarea();
+    this.closeModal(this.modalEditBallot);
+
+    if (exhaustedDueToDuplicate) {
+      this.showToast(`Updated ${serial}. (Valid up to Pref ${validPrefs.length}; exhausts at Pref ${duplicateRankNum} under Statute 51(1)(h)).`, "info");
+    } else {
+      this.showToast(`✓ Updated ballot ${serial} successfully.`, "success");
+    }
+  }
+
+  deleteBallotFromEditModal() {
+    const idx = parseInt(this.editBallotIndex.value, 10);
+    if (isNaN(idx) || idx < 0 || idx >= this.ballotEntries.length) return;
+    const serial = this.ballotEntries[idx].serial;
+
+    if (confirm(`Are you sure you want to delete ballot ${serial}?`)) {
+      this.ballotEntries.splice(idx, 1);
+      this.renderBallotTable();
+      this.syncRawTextarea();
+      this.closeModal(this.modalEditBallot);
+      this.showToast(`Ballot ${serial} deleted.`, "info");
+    }
+  }
+
+  // =========================================================================
+  // DOUBLE CONFIRMATION CLEAR ALL BALLOTS LOGIC
+  // =========================================================================
+
+  openClearBallotsDialog() {
+    if (this.ballotEntries.length === 0) {
+      this.showToast("Ballot box is already empty (0 ballots).", "info");
+      return;
+    }
+
+    const totalVotes = this.ballotEntries.reduce((acc, b) => acc + (b.count || 1), 0);
+    this.clearModalBallotCount.textContent = this.ballotEntries.length;
+    this.clearModalVoteCount.textContent = totalVotes;
+
+    // Reset to step 1
+    this.clearStep1.style.display = 'block';
+    this.clearStep2.style.display = 'none';
+    this.inputClearConfirmWord.value = '';
+    this.btnExecuteClear.disabled = true;
+    this.btnExecuteClear.style.opacity = '0.45';
+    this.btnExecuteClear.style.cursor = 'not-allowed';
+
+    this.openModal(this.modalConfirmClear);
+  }
+
+  proceedToClearStep2() {
+    this.clearStep1.style.display = 'none';
+    this.clearStep2.style.display = 'block';
+    this.inputClearConfirmWord.value = '';
+    this.btnExecuteClear.disabled = true;
+    this.btnExecuteClear.style.opacity = '0.45';
+    this.btnExecuteClear.style.cursor = 'not-allowed';
+    setTimeout(() => this.inputClearConfirmWord.focus(), 150);
+  }
+
+  backToClearStep1() {
+    this.clearStep1.style.display = 'block';
+    this.clearStep2.style.display = 'none';
+  }
+
+  handleClearConfirmInput() {
+    const val = this.inputClearConfirmWord.value.trim().toUpperCase();
+    if (val === 'CLEAR') {
+      this.btnExecuteClear.disabled = false;
+      this.btnExecuteClear.style.opacity = '1';
+      this.btnExecuteClear.style.cursor = 'pointer';
+    } else {
+      this.btnExecuteClear.disabled = true;
+      this.btnExecuteClear.style.opacity = '0.45';
+      this.btnExecuteClear.style.cursor = 'not-allowed';
+    }
+  }
+
+  executeClearAllBallots() {
+    const count = this.ballotEntries.length;
+    this.clearAllBallots();
+    this.closeModal(this.modalConfirmClear);
+    this.showToast(`Cleared ${count} ballot(s). Ballot box is now empty.`, "info");
   }
 
   syncRawTextarea() {

@@ -311,6 +311,26 @@ body {
   font-size: 0.8125rem;
 }
 
+
+.btn-danger {
+  background: #dc2626;
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
 .btn-link {
   background: none;
   border: none;

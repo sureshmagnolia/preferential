@@ -665,7 +665,13 @@
                     <p class="config-card-sub">Audit trail of verified paper ballots deposited in the box.</p>
                   </div>
                 </div>
-                <div class="ballot-box-total" id="ballot-box-total-pill">100 Total Ballots</div>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                  <div class="ballot-box-total" id="ballot-box-total-pill">100 Total Ballots</div>
+                  <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-table-ballots" title="Reset ballot box with double confirmation" style="color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); padding: 0.25rem 0.6rem;">
+                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Clear Box
+                  </button>
+                </div>
               </div>
 
               <div class="ballot-table-wrap">
@@ -675,7 +681,7 @@
                       <th style="width: 140px;">Serial / Slip ID</th>
                       <th style="width: 70px;">Count</th>
                       <th>Ranked Preferences</th>
-                      <th style="width: 100px; text-align: right;">Action</th>
+                      <th style="width: 130px; text-align: right;">Action</th>
                     </tr>
                   </thead>
                   <tbody id="ballot-table-body">
@@ -860,6 +866,142 @@
       <div id="ballot-audit-slip-content">
         <!-- Rendered dynamically by app.js -->
       </div>
+    </div>
+  </div>
+
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: EDIT BALLOT RECORD                                                 -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-edit-ballot" role="dialog" aria-modal="true" aria-labelledby="modal-edit-ballot-title">
+    <div class="modal-content" style="max-width: 540px;">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.6rem;">
+          <div style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.35); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.05rem;">
+            ✎
+          </div>
+          <div>
+            <h2 class="modal-title" id="modal-edit-ballot-title" style="margin: 0; font-size: 1.15rem;">Edit Ballot Record</h2>
+            <p class="text-secondary" id="modal-edit-ballot-sub" style="margin: 0.15rem 0 0 0; font-size: 0.8rem;">Modify serial, count, or preference rankings</p>
+          </div>
+        </div>
+        <button class="btn btn-ghost btn-icon" id="btn-close-edit-ballot-modal" aria-label="Close dialog">✕</button>
+      </div>
+
+      <div style="padding-top: 0.5rem;">
+        <input type="hidden" id="edit-ballot-index">
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 0.75rem; margin-bottom: 1rem;">
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="edit-ballot-serial" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Ballot Serial # / Slip ID:</label>
+            <input type="text" id="edit-ballot-serial" class="form-input" style="font-family: var(--font-mono); font-weight: 700; font-size: 0.9rem;">
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label" for="edit-ballot-count" style="font-size: 0.8rem; margin-bottom: 0.25rem;">Multiplier Count:</label>
+            <input type="number" id="edit-ballot-count" class="form-input" min="1" max="5000" style="text-align: center; font-weight: 700; font-size: 0.9rem;">
+          </div>
+        </div>
+
+        <label class="form-label" style="font-size: 0.8rem; margin-bottom: 0.4rem; display: block;">Candidate Ranked Preferences (1, 2, 3...):</label>
+        <div class="ballot-paper-form" id="edit-ballot-candidate-inputs" style="max-height: 280px; overflow-y: auto; padding: 0.5rem; border: 1px solid var(--border-medium); border-radius: var(--radius-sm); background: rgba(0, 0, 0, 0.2);">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Duplicate warning inside edit modal -->
+        <div id="edit-duplicate-rank-alert" class="rank-duplicate-alert" style="display: none; margin-top: 0.75rem;">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          <span id="edit-duplicate-rank-msg">Warning</span>
+        </div>
+
+        <!-- Action footer -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-medium); padding-top: 1rem; margin-top: 1.25rem;">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-delete-from-edit-modal" style="color: #f87171;" title="Delete this specific ballot">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Delete Ballot
+          </button>
+          <div style="display: flex; gap: 0.6rem;">
+            <button type="button" class="btn btn-secondary" id="btn-cancel-edit-ballot">Cancel</button>
+            <button type="button" class="btn btn-primary" id="btn-save-edit-ballot">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- MODAL: DOUBLE CONFIRMATION FOR CLEARING ALL BALLOTS                       -->
+  <!-- ========================================================================= -->
+  <div class="modal-overlay" id="modal-confirm-clear-ballots" role="dialog" aria-modal="true" aria-labelledby="modal-clear-title">
+    <div class="modal-content" style="max-width: 490px;">
+      
+      <!-- STEP 1: Warning & Initial Confirmation -->
+      <div id="clear-ballots-step1">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div style="background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.4); width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+              ⚠️
+            </div>
+            <div>
+              <h2 class="modal-title" id="modal-clear-title" style="margin: 0; font-size: 1.15rem; color: #fbbf24;">Clear All Ballots?</h2>
+              <span style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">Safeguard: Step 1 of 2</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-icon" id="btn-close-clear-modal-1" aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="padding: 0.75rem 0 1rem 0;">
+          <p style="margin: 0 0 0.85rem 0; font-size: 0.9rem; line-height: 1.5;">
+            You have requested to reset the ballot box. This will delete all <strong id="clear-modal-ballot-count" style="color: #fbbf24;">0</strong> logged ballot records (<strong id="clear-modal-vote-count">0</strong> total votes).
+          </p>
+          <div style="background: rgba(239, 68, 68, 0.08); border-left: 3px solid #ef4444; padding: 0.65rem 0.85rem; border-radius: 0 6px 6px 0; font-size: 0.825rem; color: var(--text-secondary); line-height: 1.45;">
+            <strong style="color: #fca5a5;">Important Notice:</strong> Once cleared, the audit serial numbers will restart from <code>BAL-0001</code> and all tally results will be reset.
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid var(--border-medium); padding-top: 1rem;">
+          <button type="button" class="btn btn-secondary" id="btn-cancel-clear-1">Cancel (Keep Ballots)</button>
+          <button type="button" class="btn btn-danger" id="btn-proceed-clear-step2">
+            Proceed to Final Confirmation ➜
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Final Confirmation (Typing CLEAR) -->
+      <div id="clear-ballots-step2" style="display: none;">
+        <div class="modal-header">
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <div style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+              🚨
+            </div>
+            <div>
+              <h2 class="modal-title" style="margin: 0; font-size: 1.15rem; color: #ef4444;">Final Confirmation Required</h2>
+              <span style="font-size: 0.75rem; color: #f87171; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Safeguard: Step 2 of 2</span>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-icon" id="btn-close-clear-modal-2" aria-label="Close dialog">✕</button>
+        </div>
+
+        <div style="padding: 0.75rem 0 1rem 0;">
+          <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; line-height: 1.5;">
+            To permanently delete all ballots and prevent accidental loss, please type <strong style="color: #ef4444; font-family: var(--font-mono); font-size: 1rem; letter-spacing: 1.5px;">CLEAR</strong> in the box below:
+          </p>
+          <div class="form-group" style="margin-bottom: 0.5rem;">
+            <input type="text" id="input-clear-confirm-word" class="form-input" placeholder="Type CLEAR" autocomplete="off" spellcheck="false" style="text-align: center; font-family: var(--font-mono); font-weight: 700; font-size: 1.1rem; letter-spacing: 3px; text-transform: uppercase; border-color: rgba(239, 68, 68, 0.5);">
+          </div>
+          <div id="clear-confirm-hint" style="font-size: 0.78rem; color: var(--text-muted); text-align: center;">
+            Button activates once exact text is matched.
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-medium); padding-top: 1rem;">
+          <button type="button" class="btn btn-secondary" id="btn-back-to-clear-step1">← Back</button>
+          <button type="button" class="btn btn-danger" id="btn-execute-clear-ballots" disabled style="opacity: 0.45; cursor: not-allowed;">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            Permanently Erase All Ballots
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
 
